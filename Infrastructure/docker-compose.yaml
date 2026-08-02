@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: eventticketing-postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eventticketing
+    ports:
+      - "5432:5432"
+    volumes:
+      - eventticketing_postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  eventticketing_postgres_data:
