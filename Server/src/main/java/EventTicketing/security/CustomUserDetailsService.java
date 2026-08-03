@@ -15,6 +15,7 @@ import java.util.UUID;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final userRepository userRepository;
+
     @Override
     public UserDetails loadUserByUsername(String emailOrPhone) throws UsernameNotFoundException {
         return userRepository.findByEmailOrPhone(emailOrPhone, emailOrPhone)
