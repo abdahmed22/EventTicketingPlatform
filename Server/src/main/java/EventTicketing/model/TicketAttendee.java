@@ -12,7 +12,7 @@ public class TicketAttendee {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID uuid;
     
-    private Integer ticketId;
+    private UUID ticketUUID;
 
     @Column(name = "customer_id", nullable = false)
     private Integer customerId;
