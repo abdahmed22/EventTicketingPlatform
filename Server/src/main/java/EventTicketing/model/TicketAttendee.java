@@ -15,5 +15,5 @@ public class TicketAttendee {
     private UUID ticketUUID;
 
     @Column(name = "customer_id", nullable = false)
-    private Integer customerId;
+    private UUID customerUUId;
 }
