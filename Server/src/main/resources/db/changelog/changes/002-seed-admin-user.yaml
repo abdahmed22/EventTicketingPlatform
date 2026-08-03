@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-seed-admin-user
+      author: Abd El Rahman Ahmed Mahmoud
+      comment: >
+        Seeds one ADMIN account since admin accounts are not self-service.
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  valueComputed: gen_random_uuid()
+              - column:
+                  name: name
+                  value: Platform Admin
+              - column:
+                  name: email
+                  value: admin@example.com
+              - column:
+                  name: password
+                  value: "Admin12345678Admin"
+              - column:
+                  name: role
+                  value: ADMIN
+              - column:
+                  name: created_at
+                  valueComputed: now()
