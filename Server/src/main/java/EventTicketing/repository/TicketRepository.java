@@ -18,7 +18,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     Optional<Ticket> getTicketByUUID(@Param("uuid") UUID uuid);
 
     
-    @Query("SELECT t FROM Ticket t WHERE t.customerId = :customerId")
+    @Query("SELECT t FROM Ticket t WHERE t.userOwnerUUID = :customerId")
     Optional<List<Ticket>> getAllTicketsMadeByCustomer(@Param("customer_id") Integer customerId);
     
     // علشان يعمل insert بتستخدم الsave() fuction الي بيقدمها الJpaRepository
