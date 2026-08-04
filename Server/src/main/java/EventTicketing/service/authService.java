@@ -2,23 +2,30 @@ package EventTicketing.service;
 
 import EventTicketing.dto.authDto;
 import EventTicketing.exception.DuplicateResourceException;
+import EventTicketing.exception.ForbiddenActionException;
 import EventTicketing.model.User;
+import EventTicketing.model.enums.OrganizerApplicationStatus;
 import EventTicketing.model.enums.UserRole;
+import EventTicketing.repository.organizerApplicationRepository;
 import EventTicketing.repository.userRepository;
 import EventTicketing.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class authService {
 
     private final userRepository userRepository;
+    private final organizerApplicationRepository organizerApplicationRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -46,12 +53,26 @@ public class authService {
     }
 
     public authDto.LoginResponse login(authDto.LoginRequest request) {
+        Optional<User> existingUser = userRepository.findByEmailOrPhone(request.identifier(), request.identifier());
+
+        if (existingUser.isEmpty()) {
+            rejectIfPendingApplication(request.identifier());
+            throw new BadCredentialsException("Invalid email/phone or password");
+        }
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.identifier(), request.password())
         );
         User user = (User) authentication.getPrincipal();
         String token = jwtService.generateToken(user);
         return new authDto.LoginResponse(token, authDto.UserSummary.from(user));
+    }
+
+    private void rejectIfPendingApplication(String identifier) {
+        organizerApplicationRepository.findByStatusAndIdentifier(OrganizerApplicationStatus.PENDING, identifier)
+                .ifPresent(application -> {
+                    throw new ForbiddenActionException("Your organizer application is still under review");
+                });
     }
 
     private String normalizePhone(String phone) {
