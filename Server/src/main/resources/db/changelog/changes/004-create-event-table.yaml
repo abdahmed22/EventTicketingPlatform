@@ -73,13 +73,13 @@ databaseChangeLog:
 
               - column:
                   name: venue_id
-                  type: BIGINT
+                  type: UUID
                   constraints:
                     nullable: false
 
               - column:
                   name: organizer_id
-                  type: BIGINT
+                  type: UUID
                   constraints:
                     nullable: false
 

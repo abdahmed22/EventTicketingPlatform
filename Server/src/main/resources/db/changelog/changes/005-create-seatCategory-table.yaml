@@ -27,7 +27,7 @@ databaseChangeLog:
 
               - column:
                   name: venue_id
-                  type: BIGINT
+                  type: UUID
                   constraints:
                     nullable: false
                     foreignKeyName: fk_seat_category_venue
