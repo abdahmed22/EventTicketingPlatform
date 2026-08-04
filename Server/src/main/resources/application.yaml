@@ -3,8 +3,8 @@ spring:
     name: demo
   datasource:
     url: jdbc:postgresql://localhost:5432/eventticketing
-    username: postgres
-    password: 103205
+    username: admin
+    password: password
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   jpa:
@@ -15,3 +15,10 @@ security:
   jwt:
     secret: 8f3e9c2a1b7d4f6e0a9c8b7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8e7f
     expiration-ms: 86400000
+app:
+  cors:
+    allowed-origins: http://localhost:4200
+admin:
+  seed:
+    email: ${ADMIN_EMAIL:admin@example.com}
+    password: ${ADMIN_PASSWORD:Admin12345678Admin}
