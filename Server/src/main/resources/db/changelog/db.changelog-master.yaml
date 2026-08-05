@@ -1,11 +1,19 @@
 databaseChangeLog:
+
   - include:
       file: db/changelog/changes/001-create-users-table.yaml
+
   - include:
       file: db/changelog/changes/002-create-organizer-applications-table.yaml
+
   - include:
       file: db/changelog/changes/003-create-venue-table.yaml
+
   - include:
       file: db/changelog/changes/004-create-event-table.yaml
+
   - include:
       file: db/changelog/changes/005-create-seatCategory-table.yaml
+
+  - include:
+      file: db/changelog/changes/006-create-booking-table.yaml

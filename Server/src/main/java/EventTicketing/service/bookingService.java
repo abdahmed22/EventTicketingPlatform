@@ -7,9 +7,9 @@ import EventTicketing.model.Event;
 import EventTicketing.model.SeatCategory;
 import EventTicketing.model.User;
 import EventTicketing.model.enums.BookingStatus;
-import EventTicketing.repository.bookingRepository;
+import EventTicketing.repository.BookingRepository;
 import EventTicketing.repository.eventRepository;
-import EventTicketing.repository.seatCategoryRepository;
+import EventTicketing.repository.SeatCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,9 +25,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class bookingService {
 
-  private final bookingRepository bookingRepository;
+  private final BookingRepository bookingRepository;
   private final eventRepository eventRepository;
-  private final seatCategoryRepository seatCategoryRepository;
+  private final SeatCategoryRepository seatCategoryRepository;
 
   @Transactional
   public bookingDto.Response reserve(User user, bookingDto.CreateRequest request) {

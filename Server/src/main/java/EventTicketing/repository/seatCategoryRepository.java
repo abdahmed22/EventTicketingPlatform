@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface seatCategoryRepository extends JpaRepository<SeatCategory, UUID> {
+public interface SeatCategoryRepository extends JpaRepository<SeatCategory, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM SeatCategory s WHERE s.id = :id")

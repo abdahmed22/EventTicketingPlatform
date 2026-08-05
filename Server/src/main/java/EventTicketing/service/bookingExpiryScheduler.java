@@ -1,27 +1,26 @@
 package EventTicketing.service;
 
 import EventTicketing.model.Booking;
-import EventTicketing.model.SeatCategory;
 import EventTicketing.model.enums.BookingStatus;
-import EventTicketing.repository.bookingRepository;
-import EventTicketing.repository.seatCategoryRepository;
+import EventTicketing.repository.BookingRepository;
+import EventTicketing.repository.SeatCategoryRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class bookingExpiryScheduler {
+public class BookingExpiryScheduler {
 
-    private final bookingRepository bookingRepository;
-    private final seatCategoryRepository seatCategoryRepository;
+    private final BookingRepository bookingRepository;
+    private final SeatCategoryRepository seatCategoryRepository;
 
 
-    @Scheduled(fixedRate = 60000) // every 1 minute
+    @Scheduled(fixedRate = 60000)
     @Transactional
     public void expirePendingBookings() {
 
@@ -34,17 +33,21 @@ public class bookingExpiryScheduler {
 
         for (Booking booking : expiredBookings) {
 
-            SeatCategory seatCategory = booking.getSeatCategory();
-
-            seatCategory.setAvailableSeats(
-                    seatCategory.getAvailableSeats()
-                            + booking.getQuantity()
-            );
-
             booking.setStatus(BookingStatus.CANCELLED);
             booking.setCancelledAt(Instant.now());
 
-            seatCategoryRepository.save(seatCategory);
+
+            booking.getSeatCategory()
+                    .setAvailableSeats(
+                            booking.getSeatCategory().getAvailableSeats()
+                                    + booking.getQuantity()
+                    );
+
+
+            seatCategoryRepository.save(
+                    booking.getSeatCategory()
+            );
+
             bookingRepository.save(booking);
         }
     }
