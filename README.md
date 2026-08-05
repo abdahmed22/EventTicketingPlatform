@@ -8,6 +8,4 @@ Tickets in this system are three pieces of information
 - Time
 also the ticket is made for only one booking, owner(payer), venue and seat(can hold multiple people based on category)
 
-# DTOs
-
 
