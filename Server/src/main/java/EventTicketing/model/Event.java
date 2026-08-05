@@ -1,27 +1,28 @@
 package EventTicketing.model;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "events")
 @Getter
 @Setter
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Event {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
+    @GeneratedValue
+    @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @Column(name = "title", nullable = false)
+    @Column(name = "title", nullable = false, length = 150)
     private String title;
 
     @Column(name = "description", columnDefinition = "TEXT")
@@ -31,35 +32,37 @@ public class Event {
     @Column(name = "category", nullable = false)
     private Category category;
 
-    @Column(name = "date_time", nullable = false)
-    private LocalDateTime dateTime;
+    // Stored separately as requested
+    @Column(name = "event_date", nullable = false)
+    private LocalDate eventDate;
+
+    @Column(name = "event_time", nullable =false)
+    private LocalTime eventTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private Status status = Status.DRAFT;
+    private Status status;
 
-    @Column(name = "venue_id", nullable = false)
-    private UUID venueId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "venue_id", nullable = false)
+    private Venue venue;
 
-    @Column(name = "organizer_id", nullable = false)
-    private UUID organizerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "organizer_id", nullable = false)
+    private User organizer;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        LocalDateTime now = LocalDateTime.now();
-        createdAt = now;
-        updatedAt = now;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    public enum Category {
+        MUSIC,
+        SPORTS,
+        CONFERENCE,
+        THEATRE,
+        OTHER
     }
 
     public enum Status {
@@ -68,11 +71,18 @@ public class Event {
         CANCELLED
     }
 
-    public enum Category {
-        MUSIC,
-        SPORTS,
-        CONFERENCE,
-        THEATRE,
-        OTHER
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+
+        if (status == null) {
+            status = Status.DRAFT;
+        }
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

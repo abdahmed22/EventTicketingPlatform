@@ -1,6 +1,6 @@
 package EventTicketing.exception;
 
-public class DuplicateResourceException extends RuntimeException {
+public class DuplicateResourceException extends BaseAppException {
     public DuplicateResourceException(String message) {
         super(message);
     }
