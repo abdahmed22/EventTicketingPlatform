@@ -14,40 +14,56 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/api/bookings")
 @RequiredArgsConstructor
 public class bookingController {
 
     private final bookingService bookingService;
 
-    @PostMapping("/api/bookings/reserve")
+
+    @PostMapping
     public ResponseEntity<bookingDto.Response> reserve(
             @AuthenticationPrincipal User user,
-            @Valid @RequestBody bookingDto.CreateRequest request) {
+            @Valid @RequestBody bookingDto.CreateRequest request
+    ) {
 
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
                 .body(bookingService.reserve(user, request));
     }
 
-    @PostMapping("/api/bookings/{id}/confirm")
+
+    @PostMapping("/{id}/confirm")
     public ResponseEntity<bookingDto.Response> confirm(
             @PathVariable UUID id,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal User user
+    ) {
 
-        return ResponseEntity.ok(bookingService.confirm(id, user));
+        return ResponseEntity.ok(
+                bookingService.confirm(id, user)
+        );
     }
 
-    @PostMapping("/api/bookings/{id}/cancel")
+
+    @PostMapping("/{id}/cancel")
     public ResponseEntity<bookingDto.Response> cancel(
             @PathVariable UUID id,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal User user
+    ) {
 
-        return ResponseEntity.ok(bookingService.cancel(id, user));
+        return ResponseEntity.ok(
+                bookingService.cancel(id, user)
+        );
     }
 
-    @GetMapping("/api/bookings/my")
-    public ResponseEntity<List<bookingDto.Response>> myBookings(
-            @AuthenticationPrincipal User user) {
 
-        return ResponseEntity.ok(bookingService.myBookings(user));
+    @GetMapping("/my")
+    public ResponseEntity<List<bookingDto.Response>> myBookings(
+            @AuthenticationPrincipal User user
+    ) {
+
+        return ResponseEntity.ok(
+                bookingService.myBookings(user)
+        );
     }
 }
