@@ -25,7 +25,7 @@ public class Ticket {
     private String ticketCode;
 
     @Column(name = "creation_date")
-    private Date createdAt;
+    private String createdAt;
 
     private UUID bookingId;
     private UUID seat;
