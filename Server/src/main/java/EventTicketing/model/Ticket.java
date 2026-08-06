@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.sql.Time;
-import java.sql.Date;
+import java.util.Date;
 import java.util.UUID;
 
 @Table(name = "tickets")
@@ -25,7 +25,7 @@ public class Ticket {
     private String ticketCode;
 
     @Column(name = "creation_date")
-    private String createdAt;
+    private Date createdAt;
 
     private UUID bookingId;
     private UUID seat;
