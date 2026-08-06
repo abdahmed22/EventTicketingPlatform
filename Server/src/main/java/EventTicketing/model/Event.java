@@ -45,12 +45,18 @@ public class Event {
     @Column(name = "status", nullable = false)
     private Status status;
 
+    @Column(name = "venue_id", nullable = false)
+    private UUID venueId;
+
+    @Column(name = "organizer_id", nullable = false)
+    private UUID organizerId;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "venue_id", nullable = false)
+    @JoinColumn(name = "venue_id", nullable = false, insertable = false, updatable = false)
     private Venue venue;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organizer_id", nullable = false)
+    @JoinColumn(name = "organizer_id", nullable = false, insertable = false, updatable = false)
     private User organizer;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -90,5 +96,22 @@ public class Event {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Bridge for eventService: combines eventDate + eventTime into a single LocalDateTime
+    public LocalDateTime getDateTime() {
+        if (eventDate == null) return null;
+        LocalTime time = (eventTime != null) ? eventTime : LocalTime.MIDNIGHT;
+        return LocalDateTime.of(eventDate, time);
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        if (dateTime != null) {
+            this.eventDate = dateTime.toLocalDate();
+            this.eventTime = dateTime.toLocalTime();
+        } else {
+            this.eventDate = null;
+            this.eventTime = null;
+        }
     }
 }

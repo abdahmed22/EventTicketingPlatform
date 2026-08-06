@@ -32,74 +32,75 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtFilter jwtFilter;
+  private final JwtFilter jwtFilter;
 
-    @Value("${app.cors.allowed-origins}")
-    private String allowedOriginsRaw;
+  @Value("${app.cors.allowed-origins}")
+  private String allowedOriginsRaw;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/register/**", "/api/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
-                        .requestMatchers("/error").permitAll()
-                        .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
-                        .requestMatchers("/api/organizer/**").hasAnyRole("ORGANIZER", "ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .exceptionHandling(handling -> handling
-                        .authenticationEntryPoint((request, response, authException) ->
-                                writeError(response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED",
-                                        "Authentication is required to access this resource"))
-                        .accessDeniedHandler((request, response, accessDeniedException) ->
-                                writeError(response, HttpStatus.FORBIDDEN, "ACCESS_DENIED",
-                                        "You do not have permission to perform this action"))
-                )
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+        .csrf(csrf -> csrf.disable())
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(
+                "/api/auth/register",
+                "/api/auth/login",
+                "/api/register/organizer-application")
+            .permitAll()
 
-    private void writeError(HttpServletResponse response, HttpStatus status, String errorCode, String message)
-            throws IOException {
-        response.setStatus(status.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write(String.format(
-                "{\"timestamp\":\"%s\",\"status\":%d,\"error\":\"%s\",\"message\":\"%s\",\"fieldErrors\":[]}",
-                Instant.now(), status.value(), escape(errorCode), escape(message)
-        ));
-    }
+            .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
+            .requestMatchers("/error").permitAll()
+            .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
+            .requestMatchers("/api/organizer/**").hasAnyRole("ORGANIZER", "ADMIN")
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .anyRequest().authenticated())
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .exceptionHandling(handling -> handling
+            .authenticationEntryPoint(
+                (request, response, authException) -> writeError(response, HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED",
+                    "Authentication is required to access this resource"))
+            .accessDeniedHandler((request, response, accessDeniedException) -> writeError(response,
+                HttpStatus.FORBIDDEN, "ACCESS_DENIED",
+                "You do not have permission to perform this action")))
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+    return http.build();
+  }
 
-    private String escape(String value) {
-        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
+  private void writeError(HttpServletResponse response, HttpStatus status, String errorCode, String message)
+      throws IOException {
+    response.setStatus(status.value());
+    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+    response.getWriter().write(String.format(
+        "{\"timestamp\":\"%s\",\"status\":%d,\"error\":\"%s\",\"message\":\"%s\",\"fieldErrors\":[]}",
+        Instant.now(), status.value(), escape(errorCode), escape(message)));
+  }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.stream(allowedOriginsRaw.split(",")).map(String::trim).toList());
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
+  private String escape(String value) {
+    return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
+  }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+  @Bean
+  public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    configuration.setAllowedOrigins(Arrays.stream(allowedOriginsRaw.split(",")).map(String::trim).toList());
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+    configuration.setAllowCredentials(true);
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+    return source;
+  }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    return config.getAuthenticationManager();
+  }
+
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 }

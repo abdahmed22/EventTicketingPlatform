@@ -2,7 +2,7 @@ package EventTicketing.configuration;
 
 import EventTicketing.model.User;
 import EventTicketing.model.enums.UserRole;
-import EventTicketing.repository.userRepository;
+import EventTicketing.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ public class AdminAccountInitializer implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(AdminAccountInitializer.class);
 
-    private final userRepository userRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Value("${admin.seed.email}")
