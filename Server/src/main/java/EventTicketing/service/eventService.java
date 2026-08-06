@@ -2,10 +2,14 @@ package EventTicketing.service;
 
 import EventTicketing.dto.PageResponse;
 import EventTicketing.dto.eventDto;
-import EventTicketing.exception.DuplicateResourceException;
 import EventTicketing.exception.ResourceNotFoundException;
 import EventTicketing.model.Event;
+import EventTicketing.model.User;
+import EventTicketing.model.Venue;
+import EventTicketing.model.enums.UserRole;
 import EventTicketing.repository.eventRepository;
+import EventTicketing.repository.userRepository;
+import EventTicketing.repository.venueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +27,8 @@ import java.util.UUID;
 public class eventService {
 
     private final eventRepository eventRepository;
+    private final venueRepository venueRepository;
+    private final userRepository userRepository;
 
     @Transactional
     public eventDto.Response create(eventDto.CreateRequest request) {
@@ -30,13 +36,17 @@ public class eventService {
             throw new IllegalArgumentException("Event dateTime must be in the future.");
         }
 
+        Venue venue = resolveApprovedVenue(request.venueId());
+        User organizer = resolveOrganizer(request.organizerId());
+
         Event event = new Event();
         event.setTitle(request.title());
         event.setDescription(request.description());
         event.setCategory(request.category());
-        event.setDateTime(request.dateTime());
-        event.setVenueId(request.venueId());
-        event.setOrganizerId(request.organizerId());
+        event.setEventDate(request.dateTime().toLocalDate());
+        event.setEventTime(request.dateTime().toLocalTime());
+        event.setVenue(venue);
+        event.setOrganizer(organizer);
         event.setStatus(Event.Status.DRAFT);
 
         Event saved = eventRepository.save(event);
@@ -68,10 +78,12 @@ public class eventService {
             event.setDescription(request.description());
         if (request.category() != null)
             event.setCategory(request.category());
-        if (request.dateTime() != null)
-            event.setDateTime(request.dateTime());
+        if (request.dateTime() != null) {
+            event.setEventDate(request.dateTime().toLocalDate());
+            event.setEventTime(request.dateTime().toLocalTime());
+        }
         if (request.venueId() != null)
-            event.setVenueId(request.venueId());
+            event.setVenue(resolveApprovedVenue(request.venueId()));
 
         return toResponse(eventRepository.save(event));
     }
@@ -81,7 +93,8 @@ public class eventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
 
-        if (event.getDateTime() == null || !event.getDateTime().isAfter(LocalDateTime.now())) {
+        LocalDateTime dateTime = combinedDateTime(event);
+        if (dateTime == null || !dateTime.isAfter(LocalDateTime.now())) {
             throw new IllegalArgumentException("Event dateTime must be in the future when publishing.");
         }
 
@@ -98,16 +111,41 @@ public class eventService {
         return toResponse(eventRepository.save(event));
     }
 
+    private Venue resolveApprovedVenue(UUID venueId) {
+        Venue venue = venueRepository.findById(venueId)
+                .orElseThrow(() -> new ResourceNotFoundException("Venue not found with id: " + venueId));
+        if (venue.getStatus() != Venue.Status.APPROVED) {
+            throw new IllegalArgumentException("Venue must be APPROVED before it can be used for an event.");
+        }
+        return venue;
+    }
+
+    private User resolveOrganizer(UUID organizerId) {
+        User organizer = userRepository.findById(organizerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Organizer not found with id: " + organizerId));
+        if (organizer.getRole() != UserRole.ORGANIZER && organizer.getRole() != UserRole.ADMIN) {
+            throw new IllegalArgumentException("Organizer must have role ORGANIZER or ADMIN.");
+        }
+        return organizer;
+    }
+
+    private LocalDateTime combinedDateTime(Event event) {
+        if (event.getEventDate() == null || event.getEventTime() == null) {
+            return null;
+        }
+        return LocalDateTime.of(event.getEventDate(), event.getEventTime());
+    }
+
     private eventDto.Response toResponse(Event event) {
         return new eventDto.Response(
                 event.getId(),
                 event.getTitle(),
                 event.getDescription(),
                 event.getCategory(),
-                event.getDateTime(),
+                combinedDateTime(event),
                 event.getStatus(),
-                event.getVenueId(),
-                event.getOrganizerId(),
+                event.getVenue() != null ? event.getVenue().getId() : null,
+                event.getOrganizer() != null ? event.getOrganizer().getId() : null,
                 event.getCreatedAt(),
                 event.getUpdatedAt());
     }
@@ -118,10 +156,10 @@ public class eventService {
                 event.getTitle(),
                 event.getDescription(),
                 event.getCategory(),
-                event.getDateTime(),
+                combinedDateTime(event),
                 event.getStatus(),
-                event.getVenueId(),
-                event.getOrganizerId(),
+                event.getVenue() != null ? event.getVenue().getId() : null,
+                event.getOrganizer() != null ? event.getOrganizer().getId() : null,
                 event.getCreatedAt(),
                 event.getUpdatedAt());
     }
