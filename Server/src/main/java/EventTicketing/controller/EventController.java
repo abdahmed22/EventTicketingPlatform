@@ -1,4 +1,4 @@
 package EventTicketing.controller;
 
-public class bookingController {
+public class EventController {
 }

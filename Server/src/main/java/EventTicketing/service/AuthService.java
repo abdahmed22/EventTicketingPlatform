@@ -1,13 +1,13 @@
 package EventTicketing.service;
 
-import EventTicketing.dto.authDto;
+import EventTicketing.dto.AuthDto;
 import EventTicketing.exception.DuplicateResourceException;
 import EventTicketing.exception.ForbiddenActionException;
 import EventTicketing.model.User;
 import EventTicketing.model.enums.OrganizerApplicationStatus;
 import EventTicketing.model.enums.UserRole;
-import EventTicketing.repository.organizerApplicationRepository;
-import EventTicketing.repository.userRepository;
+import EventTicketing.repository.OrganizerApplicationRepository;
+import EventTicketing.repository.UserRepository;
 import EventTicketing.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,16 +22,16 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
-public class authService {
+public class AuthService {
 
-    private final userRepository userRepository;
-    private final organizerApplicationRepository organizerApplicationRepository;
+    private final UserRepository userRepository;
+    private final OrganizerApplicationRepository organizerApplicationRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
     @Transactional
-    public authDto.UserSummary register(authDto.RegisterRequest request) {
+    public AuthDto.UserSummary register(AuthDto.RegisterRequest request) {
         String phone = normalizePhone(request.phone());
 
         if (userRepository.existsByEmail(request.email())) {
@@ -49,10 +49,10 @@ public class authService {
                 .role(UserRole.CUSTOMER)
                 .build();
 
-        return authDto.UserSummary.from(userRepository.save(user));
+        return AuthDto.UserSummary.from(userRepository.save(user));
     }
 
-    public authDto.LoginResponse login(authDto.LoginRequest request) {
+    public AuthDto.LoginResponse login(AuthDto.LoginRequest request) {
         Optional<User> existingUser = userRepository.findByEmailOrPhone(request.identifier(), request.identifier());
 
         if (existingUser.isEmpty()) {
@@ -65,7 +65,7 @@ public class authService {
         );
         User user = (User) authentication.getPrincipal();
         String token = jwtService.generateToken(user);
-        return new authDto.LoginResponse(token, authDto.UserSummary.from(user));
+        return new AuthDto.LoginResponse(token, AuthDto.UserSummary.from(user));
     }
 
     private void rejectIfPendingApplication(String identifier) {

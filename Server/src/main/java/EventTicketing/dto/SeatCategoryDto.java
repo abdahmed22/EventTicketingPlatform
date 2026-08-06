@@ -1,4 +1,4 @@
 package EventTicketing.dto;
 
-public class bookingDto {
+public class SeatCategoryDto {
 }

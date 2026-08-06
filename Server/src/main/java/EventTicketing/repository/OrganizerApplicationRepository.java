@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface organizerApplicationRepository extends JpaRepository<OrganizerApplication, UUID> {
+public interface OrganizerApplicationRepository extends JpaRepository<OrganizerApplication, UUID> {
 
     Optional<OrganizerApplication> findByEmail(String email);
 

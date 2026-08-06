@@ -1,4 +1,4 @@
 package EventTicketing.dto;
 
-public class venueDto {
+public class UserDto {
 }

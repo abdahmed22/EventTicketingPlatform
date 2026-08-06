@@ -1,6 +1,6 @@
 package EventTicketing.exception;
 
-import EventTicketing.dto.errorResponse;
+import EventTicketing.dto.ErrorResponse;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -21,53 +21,58 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<errorResponse> handleNotFound(ResourceNotFoundException ex) {
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
         return build(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage());
     }
 
     @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<errorResponse> handleDuplicate(DuplicateResourceException ex) {
+    public ResponseEntity<ErrorResponse> handleDuplicate(DuplicateResourceException ex) {
         return build(HttpStatus.CONFLICT, "DUPLICATE_RESOURCE", ex.getMessage());
     }
 
     @ExceptionHandler(ForbiddenActionException.class)
-    public ResponseEntity<errorResponse> handleForbiddenAction(ForbiddenActionException ex) {
+    public ResponseEntity<ErrorResponse> handleForbiddenAction(ForbiddenActionException ex) {
         return build(HttpStatus.FORBIDDEN, "FORBIDDEN_ACTION", ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<errorResponse> handleValidation(MethodArgumentNotValidException ex) {
-        List<errorResponse.FieldError> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> new errorResponse.FieldError(fe.getField(), fe.getDefaultMessage()))
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+        List<ErrorResponse.FieldError> fieldErrors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fe -> new ErrorResponse.FieldError(fe.getField(), fe.getDefaultMessage()))
                 .toList();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                errorResponse.of(HttpStatus.BAD_REQUEST.value(), "VALIDATION_ERROR",
+                ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), "VALIDATION_ERROR",
                         "One or more fields are invalid", fieldErrors)
         );
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<errorResponse> handleBadCredentials(BadCredentialsException ex) {
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
         return build(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "Invalid email/phone or password");
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<errorResponse> handleAccessDenied(AccessDeniedException ex) {
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
         return build(HttpStatus.FORBIDDEN, "ACCESS_DENIED", "You do not have permission to perform this action");
     }
 
     @ExceptionHandler(JwtException.class)
-    public ResponseEntity<errorResponse> handleJwtException(JwtException ex) {
+    public ResponseEntity<ErrorResponse> handleJwtException(JwtException ex) {
         return build(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "Invalid or expired token");
     }
 
+    @ExceptionHandler({IllegalStateException.class, SeatUnavailableException.class, InvalidStateTransitionException.class})
+    public ResponseEntity<ErrorResponse> handleBadRequestState(RuntimeException ex) {
+        return build(HttpStatus.BAD_REQUEST, "INVALID_STATE", ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<errorResponse> handleGeneric(Exception ex, HttpServletRequest req) {
+    public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest req) {
         log.error("Unhandled exception on {} {}", req.getMethod(), req.getRequestURI(), ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Unexpected error occurred");
     }
 
-    private ResponseEntity<errorResponse> build(HttpStatus status, String errorCode, String message) {
-        return ResponseEntity.status(status).body(errorResponse.of(status.value(), errorCode, message));
+    private ResponseEntity<ErrorResponse> build(HttpStatus status, String errorCode, String message) {
+        return ResponseEntity.status(status).body(ErrorResponse.of(status.value(), errorCode, message));
     }
 }

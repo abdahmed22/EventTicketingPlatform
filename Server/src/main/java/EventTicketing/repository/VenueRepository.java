@@ -5,5 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface venueRepository extends JpaRepository<Venue, UUID> {
+public interface VenueRepository extends JpaRepository<Venue, UUID> {
 }

@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.UUID;
 
-public abstract class organizerApplicationDto {
+public abstract class OrganizerApplicationDto {
 
     public record SubmitRequest(
             @NotBlank(message = "Name is required")
