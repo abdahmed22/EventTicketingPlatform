@@ -6,6 +6,8 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -36,7 +38,7 @@ public class Event {
     @Column(name = "event_date", nullable = false)
     private LocalDate eventDate;
 
-    @Column(name = "event_time", nullable =false)
+    @Column(name = "event_time", nullable = false)
     private LocalTime eventTime;
 
     @Enumerated(EnumType.STRING)
@@ -50,6 +52,10 @@ public class Event {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "organizer_id", nullable = false)
     private User organizer;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<SeatCategory> seatCategories = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
