@@ -31,6 +31,6 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
     @Query("SELECT t FROM Ticket t WHERE t.ticketCode = :ticketCode AND t.evnt = :evnt")
     Optional<List<Ticket>> getEventTickets(@Param("ticket_code") String ticketCode, @Param("owner_id") UUID evnt);
-    
-    
+
+
 }
