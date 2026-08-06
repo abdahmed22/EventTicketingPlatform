@@ -1,4 +1,4 @@
 package EventTicketing.service;
 
-public class seatCategoryService {
+public class SeatCategoryService {
 }

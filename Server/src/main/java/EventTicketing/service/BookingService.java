@@ -1,6 +1,6 @@
 package EventTicketing.service;
 
-import EventTicketing.dto.bookingDto;
+import EventTicketing.dto.BookingDto;
 import EventTicketing.exception.ResourceNotFoundException;
 import EventTicketing.exception.ForbiddenActionException;
 import EventTicketing.model.Booking;
@@ -9,7 +9,7 @@ import EventTicketing.model.SeatCategory;
 import EventTicketing.model.User;
 import EventTicketing.model.enums.BookingStatus;
 import EventTicketing.repository.BookingRepository;
-import EventTicketing.repository.eventRepository;
+import EventTicketing.repository.EventRepository;
 import EventTicketing.repository.SeatCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,10 +24,10 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class bookingService {
+public class BookingService {
 
     private final BookingRepository bookingRepository;
-    private final eventRepository eventRepository;
+    private final EventRepository eventRepository;
     private final SeatCategoryRepository seatCategoryRepository;
 
 
@@ -44,9 +44,9 @@ public class bookingService {
 
 
     @Transactional
-    public bookingDto.Response reserve(
+    public BookingDto.Response reserve(
             User user,
-            bookingDto.CreateRequest request
+            BookingDto.CreateRequest request
     ) {
 
         Event event = eventRepository.findById(request.eventId())
@@ -101,13 +101,13 @@ public class bookingService {
                 bookingRepository.save(booking);
 
 
-        return bookingDto.Response.from(savedBooking);
+        return BookingDto.Response.from(savedBooking);
     }
 
 
 
     @Transactional
-    public bookingDto.Response confirm(
+    public BookingDto.Response confirm(
             UUID bookingId,
             User user
     ) {
@@ -135,6 +135,11 @@ public class bookingService {
         }
 
 
+        if (Instant.now().isAfter(booking.getExpiresAt())) {
+            throw new IllegalStateException("Booking reservation expired");
+        }
+
+
         booking.setStatus(
                 BookingStatus.CONFIRMED
         );
@@ -144,7 +149,7 @@ public class bookingService {
         );
 
 
-        return bookingDto.Response.from(
+        return BookingDto.Response.from(
                 bookingRepository.save(booking)
         );
     }
@@ -152,7 +157,7 @@ public class bookingService {
 
 
     @Transactional
-    public bookingDto.Response cancel(
+    public BookingDto.Response cancel(
             UUID bookingId,
             User user
     ) {
@@ -177,18 +182,27 @@ public class bookingService {
 
 
         if (booking.getStatus()
-                == BookingStatus.CANCELLED) {
+                == BookingStatus.CANCELLED
+                || booking.getStatus()
+                == BookingStatus.EXPIRED) {
 
 
             throw new IllegalStateException(
-                    "Booking already cancelled");
+                    "Booking is already inactive");
         }
 
 
 
+        // Lock SeatCategory before returning seats to avoid race conditions
+        SeatCategory seatCategory =
+                seatCategoryRepository.findByIdWithLock(booking.getSeatCategory().getId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Seat category not found"));
+
         // return seats
         updateAvailableSeats(
-                booking.getSeatCategory(),
+                seatCategory,
                 booking.getQuantity()
         );
 
@@ -205,7 +219,7 @@ public class bookingService {
 
 
 
-        return bookingDto.Response.from(
+        return BookingDto.Response.from(
                 bookingRepository.save(booking)
         );
     }
@@ -239,8 +253,7 @@ public class bookingService {
 
 
 
-
-    public List<bookingDto.Response> myBookings(
+    public List<BookingDto.Response> myBookings(
             User user
     ) {
 
@@ -250,7 +263,7 @@ public class bookingService {
 
                 .stream()
 
-                .map(bookingDto.Response::from)
+                .map(BookingDto.Response::from)
 
                 .toList();
     }

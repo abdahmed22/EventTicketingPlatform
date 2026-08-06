@@ -1,8 +1,8 @@
 package EventTicketing.controller;
 
-import EventTicketing.dto.bookingDto;
+import EventTicketing.dto.BookingDto;
 import EventTicketing.model.User;
-import EventTicketing.service.bookingService;
+import EventTicketing.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,15 +16,15 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/bookings")
 @RequiredArgsConstructor
-public class bookingController {
+public class BookingController {
 
-    private final bookingService bookingService;
+    private final BookingService bookingService;
 
 
     @PostMapping
-    public ResponseEntity<bookingDto.Response> reserve(
+    public ResponseEntity<BookingDto.Response> reserve(
             @AuthenticationPrincipal User user,
-            @Valid @RequestBody bookingDto.CreateRequest request
+            @Valid @RequestBody BookingDto.CreateRequest request
     ) {
 
         return ResponseEntity
@@ -34,7 +34,7 @@ public class bookingController {
 
 
     @PostMapping("/{id}/confirm")
-    public ResponseEntity<bookingDto.Response> confirm(
+    public ResponseEntity<BookingDto.Response> confirm(
             @PathVariable UUID id,
             @AuthenticationPrincipal User user
     ) {
@@ -46,7 +46,7 @@ public class bookingController {
 
 
     @PostMapping("/{id}/cancel")
-    public ResponseEntity<bookingDto.Response> cancel(
+    public ResponseEntity<BookingDto.Response> cancel(
             @PathVariable UUID id,
             @AuthenticationPrincipal User user
     ) {
@@ -58,7 +58,7 @@ public class bookingController {
 
 
     @GetMapping("/my")
-    public ResponseEntity<List<bookingDto.Response>> myBookings(
+    public ResponseEntity<List<BookingDto.Response>> myBookings(
             @AuthenticationPrincipal User user
     ) {
 

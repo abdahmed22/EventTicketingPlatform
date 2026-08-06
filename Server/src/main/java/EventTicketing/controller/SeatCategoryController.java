@@ -1,4 +1,4 @@
 package EventTicketing.controller;
 
-public class venueController {
+public class SeatCategoryController {
 }

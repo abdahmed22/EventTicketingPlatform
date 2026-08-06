@@ -1,7 +1,7 @@
 package EventTicketing.service;
 
-import EventTicketing.dto.authDto;
-import EventTicketing.dto.organizerApplicationDto;
+import EventTicketing.dto.AuthDto;
+import EventTicketing.dto.OrganizerApplicationDto;
 import EventTicketing.exception.DuplicateResourceException;
 import EventTicketing.exception.ForbiddenActionException;
 import EventTicketing.exception.ResourceNotFoundException;
@@ -9,8 +9,8 @@ import EventTicketing.model.OrganizerApplication;
 import EventTicketing.model.User;
 import EventTicketing.model.enums.OrganizerApplicationStatus;
 import EventTicketing.model.enums.UserRole;
-import EventTicketing.repository.organizerApplicationRepository;
-import EventTicketing.repository.userRepository;
+import EventTicketing.repository.OrganizerApplicationRepository;
+import EventTicketing.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,14 +22,14 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class organizerApplicationService {
+public class OrganizerApplicationService {
 
-    private final organizerApplicationRepository organizerApplicationRepository;
-    private final userRepository userRepository;
+    private final OrganizerApplicationRepository organizerApplicationRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public organizerApplicationDto.Response submit(organizerApplicationDto.SubmitRequest request) {
+    public OrganizerApplicationDto.Response submit(OrganizerApplicationDto.SubmitRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("An account with this email already exists");
         }
@@ -47,18 +47,18 @@ public class organizerApplicationService {
                 .status(OrganizerApplicationStatus.PENDING)
                 .build();
 
-        return organizerApplicationDto.Response.from(organizerApplicationRepository.save(application));
+        return OrganizerApplicationDto.Response.from(organizerApplicationRepository.save(application));
     }
 
-    public List<organizerApplicationDto.Response> list(OrganizerApplicationStatus status) {
+    public List<OrganizerApplicationDto.Response> list(OrganizerApplicationStatus status) {
         OrganizerApplicationStatus effectiveStatus = status != null ? status : OrganizerApplicationStatus.PENDING;
         return organizerApplicationRepository.findByStatus(effectiveStatus).stream()
-                .map(organizerApplicationDto.Response::from)
+                .map(OrganizerApplicationDto.Response::from)
                 .toList();
     }
 
     @Transactional
-    public authDto.UserSummary approve(UUID applicationId, User admin) {
+    public AuthDto.UserSummary approve(UUID applicationId, User admin) {
         OrganizerApplication application = getPendingOrThrow(applicationId);
 
         User organizer = User.builder()
@@ -75,11 +75,11 @@ public class organizerApplicationService {
         application.setReviewedBy(admin);
         organizerApplicationRepository.save(application);
 
-        return authDto.UserSummary.from(organizer);
+        return AuthDto.UserSummary.from(organizer);
     }
 
     @Transactional
-    public organizerApplicationDto.Response reject(UUID applicationId, User admin, organizerApplicationDto.RejectRequest request) {
+    public OrganizerApplicationDto.Response reject(UUID applicationId, User admin, OrganizerApplicationDto.RejectRequest request) {
         OrganizerApplication application = getPendingOrThrow(applicationId);
 
         application.setStatus(OrganizerApplicationStatus.REJECTED);
@@ -87,7 +87,7 @@ public class organizerApplicationService {
         application.setReviewedBy(admin);
         application.setRejectionReason(request != null ? request.rejectionReason() : null);
 
-        return organizerApplicationDto.Response.from(organizerApplicationRepository.save(application));
+        return OrganizerApplicationDto.Response.from(organizerApplicationRepository.save(application));
     }
 
     private OrganizerApplication getPendingOrThrow(UUID applicationId) {

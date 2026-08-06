@@ -1,4 +1,4 @@
 package EventTicketing.dto;
 
-public class userDto {
+public class TicketDto {
 }

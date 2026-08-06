@@ -1,10 +1,10 @@
 package EventTicketing.controller;
 
-import EventTicketing.dto.authDto;
-import EventTicketing.dto.organizerApplicationDto;
+import EventTicketing.dto.AuthDto;
+import EventTicketing.dto.OrganizerApplicationDto;
 import EventTicketing.model.User;
 import EventTicketing.model.enums.OrganizerApplicationStatus;
-import EventTicketing.service.organizerApplicationService;
+import EventTicketing.service.OrganizerApplicationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,34 +22,34 @@ import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-public class organizerApplicationController {
+public class OrganizerApplicationController {
 
-    private final organizerApplicationService organizerApplicationService;
+    private final OrganizerApplicationService organizerApplicationService;
 
     @PostMapping("/api/register/organizer-application")
-    public ResponseEntity<organizerApplicationDto.Response> submit(
-            @Valid @RequestBody organizerApplicationDto.SubmitRequest request) {
+    public ResponseEntity<OrganizerApplicationDto.Response> submit(
+            @Valid @RequestBody OrganizerApplicationDto.SubmitRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(organizerApplicationService.submit(request));
     }
 
     @GetMapping("/api/admin/organizer-applications")
-    public ResponseEntity<List<organizerApplicationDto.Response>> list(
+    public ResponseEntity<List<OrganizerApplicationDto.Response>> list(
             @RequestParam(required = false) OrganizerApplicationStatus status) {
         return ResponseEntity.ok(organizerApplicationService.list(status));
     }
 
     @PostMapping("/api/admin/organizer-applications/{id}/approve")
-    public ResponseEntity<authDto.UserSummary> approve(
+    public ResponseEntity<AuthDto.UserSummary> approve(
             @PathVariable UUID id,
             @AuthenticationPrincipal User admin) {
         return ResponseEntity.ok(organizerApplicationService.approve(id, admin));
     }
 
     @PostMapping("/api/admin/organizer-applications/{id}/reject")
-    public ResponseEntity<organizerApplicationDto.Response> reject(
+    public ResponseEntity<OrganizerApplicationDto.Response> reject(
             @PathVariable UUID id,
             @AuthenticationPrincipal User admin,
-            @RequestBody(required = false) organizerApplicationDto.RejectRequest request) {
+            @RequestBody(required = false) OrganizerApplicationDto.RejectRequest request) {
         return ResponseEntity.ok(organizerApplicationService.reject(id, admin, request));
     }
 }

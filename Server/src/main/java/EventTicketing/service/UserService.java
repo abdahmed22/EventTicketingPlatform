@@ -1,4 +1,4 @@
 package EventTicketing.service;
 
-public class venueService {
+public class UserService {
 }

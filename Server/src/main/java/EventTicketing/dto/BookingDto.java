@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-public abstract class bookingDto {
+public abstract class BookingDto {
 
     public record CreateRequest(
 

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.UUID;
 
-public abstract class authDto {
+public abstract class AuthDto {
 
     public record RegisterRequest(
             @NotBlank(message = "Name is required")

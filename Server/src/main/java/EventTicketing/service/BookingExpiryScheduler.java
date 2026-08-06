@@ -17,7 +17,7 @@ public class BookingExpiryScheduler {
 
     private final BookingRepository bookingRepository;
 
-    private final bookingService bookingService;
+    private final BookingService bookingService;
 
 
     @Scheduled(fixedRate = 60000)
@@ -41,12 +41,7 @@ public class BookingExpiryScheduler {
 
 
             booking.setStatus(
-                    BookingStatus.CANCELLED
-            );
-
-
-            booking.setCancelledAt(
-                    Instant.now()
+                    BookingStatus.EXPIRED
             );
 
 

@@ -1,4 +1,4 @@
 package EventTicketing.service;
 
-public class userService {
+public class EventService {
 }

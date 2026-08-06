@@ -1,4 +1,7 @@
 package EventTicketing.exception;
 
-public class InvalidStateTransitionException {
+public class InvalidStateTransitionException extends BaseAppException {
+    public InvalidStateTransitionException(String message) {
+        super(message);
+    }
 }
