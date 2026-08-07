@@ -3,8 +3,8 @@ spring:
     name: demo
   datasource:
     url: jdbc:postgresql://localhost:5432/eventticketing
-    username: admin
-    password: password
+    username: postgres
+    password: 103205
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   jpa:

@@ -267,4 +267,15 @@ public class BookingService {
 
                 .toList();
     }
+
+    @Transactional
+    public void cancelBookingsForEvent(UUID eventId) {
+        List<Booking> activeBookings = bookingRepository.findByEventIdAndStatusIn(
+                eventId, List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED));
+        for (Booking booking : activeBookings) {
+            booking.setStatus(BookingStatus.CANCELLED);
+            booking.setCancelledAt(Instant.now());
+            bookingRepository.save(booking);
+        }
+    }
 }

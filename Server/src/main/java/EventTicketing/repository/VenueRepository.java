@@ -12,4 +12,6 @@ import java.util.UUID;
 public interface VenueRepository extends JpaRepository<Venue, UUID> {
 
     List<Venue> findByRequestedBy(User organizer);
+
+    List<Venue> findByStatus(Venue.Status status);
 }
