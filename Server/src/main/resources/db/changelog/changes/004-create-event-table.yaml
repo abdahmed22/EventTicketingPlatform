@@ -3,6 +3,11 @@ databaseChangeLog:
   - changeSet:
       id: create-event-enums
       author: mazen
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: events
       changes:
         - sql:
             sql: |
@@ -23,7 +28,11 @@ databaseChangeLog:
   - changeSet:
       id: create-events-table
       author: mazen
-
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: events
       changes:
         - createTable:
             tableName: events
