@@ -58,7 +58,7 @@ databaseChangeLog:
 
               - column:
                   name: category
-                  type: event_category
+                  type: VARCHAR(30)
                   constraints:
                     nullable: false
 
@@ -76,7 +76,7 @@ databaseChangeLog:
 
               - column:
                   name: status
-                  type: event_status
+                  type: VARCHAR(20)
                   constraints:
                     nullable: false
 

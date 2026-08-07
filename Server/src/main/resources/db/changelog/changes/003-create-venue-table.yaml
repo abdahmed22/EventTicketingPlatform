@@ -57,7 +57,7 @@ databaseChangeLog:
                             nullable: false
                       - column:
                           name: status
-                          type: venue_status
+                          type: VARCHAR(20)
                           constraints:
                             nullable: false
                       - column:
