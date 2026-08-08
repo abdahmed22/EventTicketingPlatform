@@ -1,0 +1,72 @@
+<div class="review-page">
+  <header class="review-header">
+    <h1>Venue Approval Requests</h1>
+    <p class="review-subtitle">
+      Organizers submit venue registration requests. Approving a venue makes it usable by all organizers for event creation.
+    </p>
+  </header>
+
+  <div class="filter-tabs">
+    @for (option of statusOptions; track option) {
+      <button
+        type="button"
+        class="filter-tab"
+        [class.active]="statusFilter() === option"
+        (click)="setFilter(option)"
+      >
+        {{ option }}
+      </button>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="banner">Loading venue requests...</div>
+  } @else if (venues().length === 0) {
+    <div class="empty-state">No venue requests under this view.</div>
+  } @else {
+    <div class="venue-list">
+      @for (venue of venues(); track venue.id) {
+        <div class="venue-card">
+          <div class="venue-main">
+            <div class="venue-identity">
+              <h2>{{ venue.name }}</h2>
+              <span class="status-badge" [class]="'status-' + venue.status.toLowerCase()">
+                {{ venue.status }}
+              </span>
+            </div>
+            <p class="venue-detail">📍 {{ venue.address }}</p>
+            <p class="venue-detail">Capacity: <strong>{{ venue.capacity }} Seats</strong></p>
+            @if (venue.reviewedAt) {
+              <p class="venue-meta">Reviewed {{ venue.reviewedAt | date: 'medium' }}</p>
+            }
+          </div>
+
+          @if (venue.status === 'PENDING') {
+            <div class="venue-actions">
+              <button
+                type="button"
+                class="btn btn-approve"
+                [disabled]="actioningId() === venue.id"
+                (click)="approve(venue.id)"
+              >
+                {{ actioningId() === venue.id ? 'Approving...' : 'Approve' }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-reject"
+                [disabled]="actioningId() === venue.id"
+                (click)="reject(venue.id)"
+              >
+                {{ actioningId() === venue.id ? 'Rejecting...' : 'Reject' }}
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
