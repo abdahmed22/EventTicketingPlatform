@@ -16,8 +16,20 @@ public class VenueDto {
             @NotNull(message = "Capacity is required") @Min(value = 1, message = "Capacity must be greater than 0") Integer capacity) {
     }
 
-    public record RejectRequest(
-            String reason) {
+    public record UpdateRequest(
+            @NotBlank(message = "Venue name is required") String name,
+            @NotBlank(message = "Venue address is required") String address,
+            @NotNull(message = "Capacity is required") @Min(value = 1, message = "Capacity must be greater than 0") Integer capacity) {
+    }
+
+    public record Summary(
+            UUID id,
+            String name,
+            String address,
+            Integer capacity) {
+        public static Summary from(Venue venue) {
+            return new Summary(venue.getId(), venue.getName(), venue.getAddress(), venue.getCapacity());
+        }
     }
 
     public record Response(

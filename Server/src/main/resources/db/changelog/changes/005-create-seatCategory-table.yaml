@@ -3,7 +3,11 @@ databaseChangeLog:
   - changeSet:
       id: create-seat-categories-table
       author: mazen
-
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: seat_categories
       changes:
 
         - createTable:

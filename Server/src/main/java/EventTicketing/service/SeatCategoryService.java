@@ -25,8 +25,8 @@ public class SeatCategoryService {
     private final EventRepository eventRepository;
 
     public List<SeatCategoryDto.Summary> listByEvent(UUID eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
+        Event event = eventRepository.findByIdAndStatus(eventId, Event.Status.PUBLISHED)
+                .orElseThrow(() -> new ResourceNotFoundException("Published event not found with id: " + eventId));
         return seatCategoryRepository.findByEvent(event).stream()
                 .map(SeatCategoryDto.Summary::from)
                 .toList();

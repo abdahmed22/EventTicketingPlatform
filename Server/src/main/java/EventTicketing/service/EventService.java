@@ -3,13 +3,16 @@ package EventTicketing.service;
 import EventTicketing.dto.EventDto;
 import EventTicketing.dto.PageResponse;
 import EventTicketing.dto.SeatCategoryDto;
+import EventTicketing.dto.VenueDto;
 import EventTicketing.exception.ForbiddenActionException;
+import EventTicketing.exception.InvalidStateTransitionException;
 import EventTicketing.exception.ResourceNotFoundException;
 import EventTicketing.model.Event;
 import EventTicketing.model.SeatCategory;
 import EventTicketing.model.User;
 import EventTicketing.model.Venue;
 import EventTicketing.model.enums.UserRole;
+import EventTicketing.repository.BookingRepository;
 import EventTicketing.repository.EventRepository;
 import EventTicketing.repository.SeatCategoryRepository;
 import EventTicketing.repository.UserRepository;
@@ -36,6 +39,8 @@ public class EventService {
     private final EventRepository eventRepository;
     private final VenueRepository venueRepository;
     private final SeatCategoryRepository seatCategoryRepository;
+    private final BookingRepository bookingRepository;
+    private final BookingService bookingService;
 
     @Transactional
     public EventDto.Response create(EventDto.CreateRequest request, User organizer) {
@@ -135,6 +140,9 @@ public class EventService {
     @Transactional
     public EventDto.Response publish(UUID eventId, User organizer) {
         Event event = findOwnedEvent(eventId, organizer);
+        if (event.getStatus() != Event.Status.DRAFT) {
+            throw new InvalidStateTransitionException("Only draft events can be published.");
+        }
         validateEventTiming(event.getEventDate(), event.getEventTime());
 
         if (event.getVenue().getStatus() != Venue.Status.APPROVED) {
@@ -156,8 +164,90 @@ public class EventService {
     @Transactional
     public EventDto.Response cancel(UUID eventId, User organizer) {
         Event event = findOwnedEvent(eventId, organizer);
+        if (event.getStatus() == Event.Status.CANCELLED) {
+            throw new InvalidStateTransitionException("Event is already cancelled.");
+        }
         event.setStatus(Event.Status.CANCELLED);
+        bookingService.cancelBookingsForEvent(eventId);
         return toResponse(eventRepository.save(event));
+    }
+
+    // ---- Admin-only operations (§6.5): no ownership restriction applies to ADMIN (§4.4, decision #2) ----
+
+    public PageResponse<EventDto.Summary> adminList(
+            Event.Status status,
+            Event.Category category,
+            UUID venueId,
+            UUID organizerId,
+            LocalDate dateFrom,
+            LocalDate dateTo,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            int page,
+            int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Event> results = eventRepository.findFilteredForAdmin(
+                status, category, venueId, organizerId, dateFrom, dateTo, minPrice, maxPrice, pageable);
+
+        List<EventDto.Summary> content = results.getContent().stream().map(this::toSummary).toList();
+        return new PageResponse<>(content, results.getNumber(), results.getSize(),
+                results.getTotalElements(), results.getTotalPages());
+    }
+
+    public EventDto.Response adminGetById(UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
+        return toResponse(event);
+    }
+
+    @Transactional
+    public EventDto.Response adminUpdate(UUID eventId, EventDto.AdminUpdateRequest request) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
+
+        if (request.title() != null)
+            event.setTitle(request.title());
+        if (request.description() != null)
+            event.setDescription(request.description());
+        if (request.category() != null)
+            event.setCategory(request.category());
+
+        LocalDate updatedDate = event.getEventDate();
+        LocalTime updatedTime = event.getEventTime();
+        if (request.eventDate() != null) {
+            updatedDate = request.eventDate();
+            event.setEventDate(updatedDate);
+        }
+        if (request.eventTime() != null) {
+            updatedTime = request.eventTime();
+            event.setEventTime(updatedTime);
+        }
+        if (request.eventDate() != null || request.eventTime() != null) {
+            validateEventTiming(updatedDate, updatedTime);
+        }
+
+        if (request.venueId() != null) {
+            Venue venue = venueRepository.findById(request.venueId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Venue not found with id: " + request.venueId()));
+            event.setVenue(venue);
+        }
+
+        if (request.status() != null) {
+            event.setStatus(request.status());
+        }
+
+        return toResponse(eventRepository.save(event));
+    }
+
+    @Transactional
+    public void adminDelete(UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
+        if (bookingRepository.existsByEventId(eventId)) {
+            throw new ForbiddenActionException(
+                    "This event has existing bookings and cannot be deleted; cancel it instead.");
+        }
+        eventRepository.delete(event);
     }
 
     private Event findOwnedEvent(UUID eventId, User organizer) {
@@ -190,7 +280,7 @@ public class EventService {
                 event.getEventDate(),
                 event.getEventTime(),
                 event.getStatus(),
-                event.getVenue().getId(),
+                VenueDto.Summary.from(event.getVenue()),
                 event.getOrganizer().getId(),
                 seats,
                 event.getCreatedAt(),
