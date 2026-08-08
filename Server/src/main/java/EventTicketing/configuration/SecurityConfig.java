@@ -44,9 +44,9 @@ public class SecurityConfig {
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
-                "/api/auth/register",
-                "/api/auth/login",
-                "/api/register/organizer-application")
+                "/api/register",
+                "/api/login",
+                "/api/organizer-application")
             .permitAll()
 
             .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
