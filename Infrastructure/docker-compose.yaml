@@ -3,8 +3,8 @@ services:
     image: postgres:16
     container_name: eventticketing-postgres
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 103205
       POSTGRES_DB: eventticketing
     ports:
       - "5432:5432"
