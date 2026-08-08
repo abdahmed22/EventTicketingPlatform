@@ -1,0 +1,203 @@
+
+<div class="event-detail-page">
+
+  @if (loading()) {
+    <div class="loading">
+      Loading...
+    </div>
+  }
+
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  @if (event(); as currentEvent) {
+
+    <section class="event-card">
+
+      <div class="event-header">
+
+        <h1>
+          {{ currentEvent.title }}
+        </h1>
+
+        <p>
+          {{ currentEvent.description }}
+        </p>
+
+      </div>
+
+      <div class="event-info">
+
+        <p>
+          <strong>Date:</strong>
+          {{ currentEvent.eventDate }}
+        </p>
+
+        <p>
+          <strong>Time:</strong>
+          {{ currentEvent.eventTime }}
+        </p>
+
+        <p>
+          <strong>Category:</strong>
+          {{ currentEvent.category }}
+        </p>
+
+        <p>
+          <strong>Status:</strong>
+          {{ currentEvent.status }}
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <section class="booking-card">
+
+      <h2>
+        Reserve Seats
+      </h2>
+
+
+      <div class="form-group">
+
+        <label for="seatCategory">
+          Seat Category
+        </label>
+
+        <select
+          id="seatCategory"
+          [value]="selectedSeatCategoryId()"
+          (change)="
+            onSeatCategoryChange(
+              $any($event.target).value
+            )
+          "
+        >
+
+          <option value="">
+            Select a seat category
+          </option>
+
+          @for (
+            category of seatCategories();
+            track category.id
+          ) {
+
+            <option
+              [value]="category.id"
+              [disabled]="category.availableSeats <= 0"
+            >
+
+              {{ category.name }}
+              -
+              {{ category.price | currency }}
+
+              @if (category.availableSeats > 0) {
+
+                -
+                {{ category.availableSeats }}
+                seats available
+
+              } @else {
+
+                - Sold Out
+
+              }
+
+            </option>
+
+          }
+
+        </select>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="quantity">
+          Quantity
+        </label>
+
+        <input
+          id="quantity"
+          type="number"
+          min="1"
+          [max]="selectedCategory()?.availableSeats ?? 1"
+          [value]="quantity()"
+          (input)="
+            onQuantityChange(
+              +$any($event.target).value
+            )
+          "
+        />
+
+      </div>
+
+
+      @if (selectedCategory(); as category) {
+
+        <div class="availability">
+
+          Available seats:
+
+          <strong>
+            {{ category.availableSeats }}
+          </strong>
+
+        </div>
+
+
+        <div class="total-price">
+
+          Total:
+
+          <strong>
+            {{
+              category.price * quantity()
+                | currency
+            }}
+          </strong>
+
+        </div>
+
+      }
+
+
+      <button
+        type="button"
+        class="reserve-btn"
+        [disabled]="
+          loading() ||
+          !selectedCategory() ||
+          selectedCategory()!.availableSeats <= 0 ||
+          quantity() < 1 ||
+          !Number.isInteger(quantity()) ||
+          quantity() > selectedCategory()!.availableSeats
+        "
+        (click)="reserve()"
+      >
+
+        @if (loading()) {
+
+          Reserving...
+
+        } @else {
+
+          Reserve Seats
+
+        }
+
+      </button>
+
+    </section>
+
+  }
+
+</div>
+
