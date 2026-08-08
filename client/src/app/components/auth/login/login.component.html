@@ -1,0 +1,47 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <h1>Log In</h1>
+    <p class="auth-subtitle">Welcome back. Enter your details to continue.</p>
+
+    @if (loginForm().invalid() && loginForm().errors().length) {
+      @for (error of loginForm().errors(); track error) {
+        <p class="form-error">{{ error.message }}</p>
+      }
+    }
+
+    <form [formRoot]="loginForm">
+      <div class="form-field">
+        <label for="identifier">Email or phone</label>
+        <input id="identifier" type="text" autocomplete="username" [formField]="loginForm.identifier" />
+        @if (loginForm.identifier().touched() && loginForm.identifier().invalid()) {
+          @for (error of loginForm.identifier().errors(); track error) {
+            <div class="field-error">{{ error.message }}</div>
+          }
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="current-password" [formField]="loginForm.password" />
+        @if (loginForm.password().touched() && loginForm.password().invalid()) {
+          @for (error of loginForm.password().errors(); track error) {
+            <div class="field-error">{{ error.message }}</div>
+          }
+        }
+      </div>
+
+      <button class="submit-btn" type="submit" [disabled]="loginForm().submitting()">
+        @if (loginForm().submitting()) {
+          Logging in...
+        } @else {
+          Log In
+        }
+      </button>
+    </form>
+
+    <div class="auth-links">
+      <p>No account? <a routerLink="/register">Sign up</a></p>
+      <p>Want to host events instead? <a routerLink="/register/organizer">Apply to become an organizer</a></p>
+    </div>
+  </div>
+</div>

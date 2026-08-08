@@ -1,0 +1,110 @@
+<div class="review-page">
+  <header class="review-header">
+    <h1>Organizer Applications</h1>
+    <p class="review-subtitle">
+      Approving creates a live ORGANIZER account immediately. Rejecting keeps the application
+      on record with your reason attached.
+    </p>
+  </header>
+
+  <div class="filter-tabs">
+    @for (option of statusOptions; track option) {
+      <button
+        type="button"
+        class="filter-tab"
+        [class.active]="statusFilter() === option"
+        (click)="setFilter(option)"
+      >
+        {{ option }}
+      </button>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="banner">Loading applications...</div>
+  } @else if (applications().length === 0) {
+    <div class="empty-state">No applications in this view.</div>
+  } @else {
+    <div class="application-list">
+      @for (application of applications(); track application.id) {
+        <div class="application-card">
+          <div class="application-main">
+            <div class="application-identity">
+              <h2>{{ application.name }}</h2>
+              <span class="status-badge" [class]="'status-' + application.status.toLowerCase()">
+                {{ application.status }}
+              </span>
+            </div>
+            <p class="application-detail">{{ application.email }} · {{ application.phone }}</p>
+            @if (application.organizationName) {
+              <p class="application-detail">{{ application.organizationName }}</p>
+            }
+            @if (application.reason) {
+              <p class="application-reason">"{{ application.reason }}"</p>
+            }
+            <p class="application-meta">Submitted {{ application.submittedAt | date: 'medium' }}</p>
+
+            @if (application.status !== 'PENDING') {
+              <p class="application-meta">
+                Reviewed {{ application.reviewedAt | date: 'medium' }}
+                @if (application.reviewedByName) {
+                  by {{ application.reviewedByName }}
+                }
+              </p>
+              @if (application.rejectionReason) {
+                <p class="application-meta rejection-reason">Reason: {{ application.rejectionReason }}</p>
+              }
+            }
+          </div>
+
+          @if (application.status === 'PENDING') {
+            <div class="application-actions">
+              @if (rejectingId() === application.id) {
+                <div class="reject-panel">
+                  <textarea
+                    rows="2"
+                    placeholder="Reason for rejection (optional)"
+                    [value]="rejectionReason()"
+                    (input)="rejectionReason.set($any($event.target).value)"
+                  ></textarea>
+                  <div class="reject-panel-buttons">
+                    <button
+                      type="button"
+                      class="btn btn-danger"
+                      [disabled]="actioningId() === application.id"
+                      (click)="confirmReject(application.id)"
+                    >
+                      Confirm Reject
+                    </button>
+                    <button type="button" class="btn btn-ghost" (click)="cancelReject()">Cancel</button>
+                  </div>
+                </div>
+              } @else {
+                <button
+                  type="button"
+                  class="btn btn-approve"
+                  [disabled]="actioningId() === application.id"
+                  (click)="approve(application.id)"
+                >
+                  {{ actioningId() === application.id ? 'Approving...' : 'Approve' }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-reject"
+                  [disabled]="actioningId() === application.id"
+                  (click)="startReject(application.id)"
+                >
+                  Reject
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

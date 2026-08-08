@@ -8,7 +8,20 @@
   "projects": {
     "client": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+        "@schematics/angular:component": {
+          "type": "component"
+        },
+        "@schematics/angular:service": {
+          "type": "service"
+        },
+        "@schematics/angular:guard": {
+          "type": "guard"
+        },
+        "@schematics/angular:interceptor": {
+          "type": "interceptor"
+        }
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
