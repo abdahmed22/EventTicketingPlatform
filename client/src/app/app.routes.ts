@@ -13,5 +13,13 @@ export const routes: Routes = [
     canActivate: [guestGuard],
     loadComponent: () =>
       import('./components/auth/register/register.component').then((m) => m.RegisterComponent)
+  },
+  {
+    path: 'register/organizer',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./components/auth/organizer-application/organizer-application.component').then(
+        (m) => m.OrganizerApplicationComponent
+      )
   }
 ];
