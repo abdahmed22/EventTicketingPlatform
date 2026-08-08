@@ -94,6 +94,26 @@ public class EventService {
                 publishedPage.getTotalElements(), publishedPage.getTotalPages());
     }
 
+    public PageResponse<EventDto.Summary> listOrganizerEvents(
+            User organizer,
+            Event.Status status,
+            Event.Category category,
+            int page,
+            int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Event> results = eventRepository.findFilteredForAdmin(
+                status, category, null, organizer.getId(), null, null, null, null, pageable);
+
+        List<EventDto.Summary> content = results.getContent().stream().map(this::toSummary).toList();
+        return new PageResponse<>(content, results.getNumber(), results.getSize(),
+                results.getTotalElements(), results.getTotalPages());
+    }
+
+    public EventDto.Response getOrganizerById(UUID eventId, User organizer) {
+        Event event = findOwnedEvent(eventId, organizer);
+        return toResponse(event);
+    }
+
     public EventDto.Response getPublicById(UUID eventId) {
         Event event = eventRepository.findByIdAndStatus(eventId, Event.Status.PUBLISHED)
                 .orElseThrow(() -> new ResourceNotFoundException("Published event not found with id: " + eventId));

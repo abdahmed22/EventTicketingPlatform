@@ -1,0 +1,117 @@
+<div class="page-container">
+  <header class="page-header">
+    <h1>My Venue Requests</h1>
+    <p class="subtitle">
+      Organizers can register venues. All requested venues require Admin approval before being usable for event creation.
+    </p>
+  </header>
+
+  <div class="content-grid">
+    <!-- Submit Request Form -->
+    <div class="form-card">
+      <h2>Submit New Venue Request</h2>
+      <p class="card-subtitle">Request a venue location to host your upcoming events.</p>
+
+      @if (successMessage()) {
+        <div class="banner banner-success">{{ successMessage() }}</div>
+      }
+
+      @if (venueForm().invalid() && venueForm().errors().length) {
+        @for (error of venueForm().errors(); track error) {
+          <p class="form-error">{{ error.message }}</p>
+        }
+      }
+
+      <form [formRoot]="venueForm">
+        <div class="form-field">
+          <label for="venueName">Venue Name *</label>
+          <input id="venueName" type="text" [formField]="venueForm.name" placeholder="e.g. Grand Arena" />
+          @if (venueForm.name().touched() && venueForm.name().invalid()) {
+            @for (error of venueForm.name().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="venueAddress">Street Address *</label>
+          <input id="venueAddress" type="text" [formField]="venueForm.address" placeholder="e.g. 123 Main St, City" />
+          @if (venueForm.address().touched() && venueForm.address().invalid()) {
+            @for (error of venueForm.address().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="venueCapacity">Total Capacity * (> 0)</label>
+          <input id="venueCapacity" type="number" [formField]="venueForm.capacity" />
+          @if (venueForm.capacity().touched() && venueForm.capacity().invalid()) {
+            @for (error of venueForm.capacity().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
+          }
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="venueForm().submitting()">
+          {{ venueForm().submitting() ? 'Submitting...' : 'Submit Venue Request' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Venue List Column -->
+    <div class="list-column">
+      <div class="filter-tabs">
+        @for (option of statusOptions; track option) {
+          <button
+            type="button"
+            class="filter-tab"
+            [class.active]="statusFilter() === option"
+            (click)="setFilter(option)"
+          >
+            {{ option }}
+          </button>
+        }
+      </div>
+
+      @if (error()) {
+        <div class="banner banner-error">{{ error() }}</div>
+      }
+
+      @if (loading()) {
+        <div class="loading-state">Loading your venue requests...</div>
+      } @else if (venues().length === 0) {
+        <div class="empty-state">No venue requests found under this filter.</div>
+      } @else {
+        <div class="venues-list">
+          @for (venue of venues(); track venue.id) {
+            <div class="venue-card">
+              <div class="venue-top-row">
+                <h3>{{ venue.name }}</h3>
+                <span class="status-badge" [class]="'status-' + venue.status.toLowerCase()">
+                  {{ venue.status }}
+                </span>
+              </div>
+
+              <p class="venue-address">📍 {{ venue.address }}</p>
+              <div class="venue-meta">
+                <span>Capacity: <strong>{{ venue.capacity }} Seats</strong></span>
+                @if (venue.reviewedAt) {
+                  <span>Reviewed {{ venue.reviewedAt | date: 'mediumDate' }}</span>
+                }
+              </div>
+
+              @if (venue.status === 'APPROVED') {
+                <div class="usable-tag">✅ Available in Event Creation dropdown</div>
+              } @else if (venue.status === 'PENDING') {
+                <div class="pending-tag">⏳ Awaiting Admin Review</div>
+              } @else {
+                <div class="rejected-tag">❌ Request Rejected</div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

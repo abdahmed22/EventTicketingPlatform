@@ -1,0 +1,181 @@
+<div class="browse-page">
+  <header class="browse-header">
+    <div class="header-badge">Live Events</div>
+    <h1>Discover & Book Upcoming Events</h1>
+    <p class="browse-subtitle">
+      Explore live music, sports, conferences, theatre performances, and more.
+    </p>
+  </header>
+
+  <!-- Category Pills -->
+  <div class="category-tabs">
+    @for (cat of categories; track cat) {
+      <button
+        type="button"
+        class="category-tab"
+        [class.active]="selectedCategory() === cat"
+        (click)="setCategory(cat)"
+      >
+        {{ cat }}
+      </button>
+    }
+  </div>
+
+  <!-- Filter Card -->
+  <div class="filter-card">
+    <div class="filter-grid">
+      <div class="filter-group">
+        <label for="venueSelect">Venue</label>
+        <select
+          id="venueSelect"
+          [value]="selectedVenueId()"
+          (change)="selectedVenueId.set($any($event.target).value)"
+        >
+          <option value="">All Venues</option>
+          @for (v of venues(); track v.id) {
+            <option [value]="v.id">{{ v.name }} - {{ v.address }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="dateFrom">Date From</label>
+        <input
+          id="dateFrom"
+          type="date"
+          [value]="dateFrom()"
+          (input)="dateFrom.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="dateTo">Date To</label>
+        <input
+          id="dateTo"
+          type="date"
+          [value]="dateTo()"
+          (input)="dateTo.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="minPrice">Min Price ($)</label>
+        <input
+          id="minPrice"
+          type="number"
+          min="0"
+          placeholder="0"
+          [value]="minPrice() ?? ''"
+          (input)="minPrice.set($any($event.target).value ? +$any($event.target).value : null)"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="maxPrice">Max Price ($)</label>
+        <input
+          id="maxPrice"
+          type="number"
+          min="0"
+          placeholder="Any"
+          [value]="maxPrice() ?? ''"
+          (input)="maxPrice.set($any($event.target).value ? +$any($event.target).value : null)"
+        />
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" class="btn btn-primary" (click)="applyFilters()">
+        Filter Results
+      </button>
+      <button type="button" class="btn btn-ghost" (click)="resetFilters()">
+        Clear Filters
+      </button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-grid">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="skeleton-card">
+          <div class="skeleton-pill"></div>
+          <div class="skeleton-title"></div>
+          <div class="skeleton-text"></div>
+          <div class="skeleton-button"></div>
+        </div>
+      }
+    </div>
+  } @else if (events().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">📅</div>
+      <h3>No events found</h3>
+      <p>Try adjusting your search filters or check back later for new event listings.</p>
+      <button type="button" class="btn btn-ghost" (click)="resetFilters()">Reset Filters</button>
+    </div>
+  } @else {
+    <div class="events-grid">
+      @for (event of events(); track event.id) {
+        <div class="event-card">
+          <div class="card-header">
+            <span class="category-badge">{{ event.category }}</span>
+            <span class="status-badge">PUBLISHED</span>
+          </div>
+
+          <h2 class="event-title">{{ event.title }}</h2>
+
+          @if (event.description) {
+            <p class="event-description">{{ event.description }}</p>
+          }
+
+          <div class="event-meta">
+            <div class="meta-row">
+              <span class="meta-icon">📅</span>
+              <span>{{ event.eventDate | date: 'fullDate' }} at {{ event.eventTime }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-icon">📍</span>
+              <span>{{ getVenueName(event.venueId) }}</span>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <a [routerLink]="['/events', event.id]" class="btn btn-card-action">
+              View Event & Tickets →
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          type="button"
+          class="btn-page"
+          [disabled]="currentPage() === 0"
+          (click)="changePage(currentPage() - 1)"
+        >
+          ← Previous
+        </button>
+
+        <span class="page-info">
+          Page <strong>{{ currentPage() + 1 }}</strong> of <strong>{{ totalPages() }}</strong>
+          ({{ totalElements() }} total events)
+        </span>
+
+        <button
+          type="button"
+          class="btn-page"
+          [disabled]="currentPage() >= totalPages() - 1"
+          (click)="changePage(currentPage() + 1)"
+        >
+          Next →
+        </button>
+      </div>
+    }
+  }
+</div>

@@ -21,6 +21,11 @@ public class VenueController {
 
     private final VenueService venueService;
 
+    @GetMapping("/events/venues")
+    public ResponseEntity<List<VenueDto.Response>> listPublicApprovedVenues() {
+        return ResponseEntity.ok(venueService.listPendingOrAll(Venue.Status.APPROVED));
+    }
+
     @PostMapping("/organizer/venues")
     public ResponseEntity<VenueDto.Response> submit(@AuthenticationPrincipal User organizer,
             @Valid @RequestBody VenueDto.CreateRequest request) {
