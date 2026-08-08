@@ -1,0 +1,48 @@
+<header class="navbar">
+  <div class="nav-container">
+    <a routerLink="/" class="nav-brand">
+      <span class="brand-icon">🎟️</span>
+      <span class="brand-name">Eventix</span>
+    </a>
+
+    <nav class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
+        Browse Events
+      </a>
+
+      @if (authService.isOrganizer() || authService.isAdmin()) {
+        <a routerLink="/organizer/events" routerLinkActive="active" class="nav-item">
+          My Events
+        </a>
+        <a routerLink="/organizer/venues" routerLinkActive="active" class="nav-item">
+          My Venues
+        </a>
+      }
+
+      @if (authService.isAdmin()) {
+        <a routerLink="/admin/organizer-applications" routerLinkActive="active" class="nav-item">
+          Organizer Apps
+        </a>
+        <a routerLink="/admin/venues" routerLinkActive="active" class="nav-item">
+          Venue Requests
+        </a>
+      }
+    </nav>
+
+    <div class="nav-actions">
+      @if (authService.isLoggedIn()) {
+        <div class="user-badge-container">
+          <span class="user-name">{{ authService.user()?.name }}</span>
+          <span class="role-badge" [class]="'role-' + authService.role()?.toLowerCase()">
+            {{ authService.role() }}
+          </span>
+        </div>
+        <button type="button" class="btn-logout" (click)="logout()">Log Out</button>
+      } @else {
+        <a routerLink="/login" class="nav-link-btn">Log In</a>
+        <a routerLink="/register" class="btn-primary">Sign Up</a>
+        <a routerLink="/register/organizer" class="nav-link-secondary">Host Events</a>
+      }
+    </div>
+  </div>
+</header>

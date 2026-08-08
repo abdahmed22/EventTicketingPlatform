@@ -47,6 +47,23 @@ public class EventController {
 
     // ---- Organizer (§6.4) ----
 
+    @GetMapping("/organizer/events")
+    public ResponseEntity<PageResponse<EventDto.Summary>> listOrganizerEvents(
+            @AuthenticationPrincipal User organizer,
+            @RequestParam(required = false) Event.Status status,
+            @RequestParam(required = false) Event.Category category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(eventService.listOrganizerEvents(organizer, status, category, page, size));
+    }
+
+    @GetMapping("/organizer/events/{id}")
+    public ResponseEntity<EventDto.Response> getOrganizerEventDetail(
+            @AuthenticationPrincipal User organizer,
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(eventService.getOrganizerById(id, organizer));
+    }
+
     @PostMapping("/organizer/events")
     public ResponseEntity<EventDto.Response> create(
             @AuthenticationPrincipal User organizer,
