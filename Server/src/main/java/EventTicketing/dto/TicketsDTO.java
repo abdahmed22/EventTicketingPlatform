@@ -14,8 +14,7 @@ public abstract class TicketsDTO {
     public record OrganizerTicketResponse(String ticketCode, List<String> contactInfo, String status) {}
     public record AdminTicketResponse(UUID uuid,
                                       String ticketCode,
-                                      Date creationDate,
-                                      Time creationTime,
+                                      Date createdAt,
                                       UUID bookingId,
                                       UUID seat,
                                       UUID evnt,
@@ -24,7 +23,7 @@ public abstract class TicketsDTO {
                                       Double totalPrice,
                                       String status) {}
     
-    public record Request(String ticketCode, Date creationDate, Time creationTime,
+    public record Request(String ticketCode, Date createdAt,
                           UUID bookingId,
                           UUID seat,
                           UUID evnt,
