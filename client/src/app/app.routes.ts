@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { guestGuard } from './guards/guest.guard';
+import { adminGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -20,6 +21,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/auth/organizer-application/organizer-application.component').then(
         (m) => m.OrganizerApplicationComponent
+      )
+  },
+  {
+    path: 'admin/organizer-applications',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./components/admin/organizer-applications-review/organizer-applications-review.component').then(
+        (m) => m.OrganizerApplicationsReviewComponent
       )
   }
 ];
