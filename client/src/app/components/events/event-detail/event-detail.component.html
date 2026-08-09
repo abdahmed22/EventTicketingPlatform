@@ -136,6 +136,17 @@
                   </option>
                 }
               </select>
+              @if (selectedCategory(); as category) {
+                <div class="seat-availability-badge" [class.sold-out]="category.availableSeats <= 0">
+                  @if (category.availableSeats > 1) {
+                    🟢 {{ category.availableSeats }} seats available
+                  } @else if (category.availableSeats === 1) {
+                    🟢 1 seat available
+                  } @else {
+                    🔴 Sold Out
+                  }
+                </div>
+              }
             </div>
 
             <div class="form-field">
@@ -145,6 +156,7 @@
                 type="number"
                 min="1"
                 [max]="selectedCategory()?.availableSeats ?? 1"
+                [disabled]="!selectedCategory() || selectedCategory()!.availableSeats <= 0"
                 [value]="quantity()"
                 (input)="onQuantityChange(+$any($event.target).value)"
               />

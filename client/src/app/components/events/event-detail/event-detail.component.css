@@ -291,6 +291,20 @@
   color: #111827;
 }
 
+.seat-availability-badge {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.seat-availability-badge.sold-out {
+  color: var(--danger);
+}
+
 .total-price-box {
   display: flex;
   justify-content: space-between;
