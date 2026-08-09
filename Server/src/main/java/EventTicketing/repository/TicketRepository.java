@@ -1,6 +1,7 @@
 package EventTicketing.repository;
 
 import EventTicketing.model.Ticket;
+import EventTicketing.model.enums.TicketStatus;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -8,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +24,8 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
     @Query("SELECT t FROM Ticket t WHERE t.evnt = :event_UUID")
     List<Ticket> getEventTickets(@Param("event_uuid") UUID event_uuid);
+
+    Ticket findByTicketCode(String ticketCode);
     
     @Query("SELECT t FROM Ticket t WHERE t.userOwnerUUID = :owner_id")
     List<Ticket> getAllTicketsMadeByCustomer(@Param("owner_id") UUID owner_id);
@@ -48,12 +53,19 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             "WHERE t.uuid = :ticketId")
     Integer updateTicket(@Param("ticketId") UUID ticketId,
                       @Param("ticketCode") String ticketCode,
-                      @Param("createdAt") Date createdAt,
+                      @Param("createdAt") Instant createdAt,
                       @Param("bookingId") UUID bookingId,
                       @Param("seat") UUID seat,
                       @Param("evnt") UUID evnt,
                       @Param("venue") UUID venue,
                       @Param("userOwnerUUID") UUID userOwnerUUID,
-                      @Param("totalPrice") Double totalPrice,
-                      @Param("status") String status);
+                      @Param("totalPrice") BigDecimal totalPrice,
+                      @Param("status") TicketStatus status);
+
+    @Modifying
+    @Query("UPDATE Ticket t SET t.status = :status WHERE t.bookingId = :bookingId AND t.status == :status")
+    Integer updateStatusByBookingId(@Param("bookingId") UUID bookingId,
+                                @Param("status") TicketStatus status);
+
+   boolean existsByTicketCode(String ticketCode);
 }

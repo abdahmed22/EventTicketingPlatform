@@ -2,11 +2,13 @@ package EventTicketing.controller;
 
 import EventTicketing.dto.TicketsDTO;
 import EventTicketing.model.Ticket;
+import EventTicketing.model.User;
 import EventTicketing.service.TicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -70,6 +72,11 @@ public class TicketController {
     public ResponseEntity<Integer> editTicket(@PathVariable("ticketUUID") UUID ticket, @RequestBody TicketsDTO.Request newValues) {
         return new ResponseEntity<>(ticketService.editTicket(ticket, newValues), HttpStatus.ACCEPTED);
     }
+
+    @PostMapping("/admin/{ticketId}/cancel")
+    public void cancelTicket(@PathVariable UUID ticketId) {
+        ticketService.cancelTicket(ticketId);
+    }
     
     @GetMapping("/organizer/{event_uuid}")
     public ResponseEntity<List<TicketsDTO.OrganizerSpecificEventTickets>> organizerGetEventTickets(@PathVariable UUID evnt) {
@@ -85,8 +92,9 @@ public class TicketController {
         );
     }
 
-    @GetMapping("/organizer/{event_uuid}")
-    public ResponseEntity<TicketsDTO.OrganizerSpecificTicket> organizerGetSpecificTicketInEvent(@PathVariable UUID event, @RequestParam String ticket_code) {
+    @GetMapping("/organizer/{event_uuid}/{ticket_code}")
+    public ResponseEntity<TicketsDTO.OrganizerSpecificTicket> organizerGetSpecificTicketInEvent(@PathVariable UUID event, 
+                                                                                                @PathVariable String ticket_code) {
         var t = ticketService.getTicketForOrganizer(ticket_code, event);
         return new ResponseEntity<>(
                 new TicketsDTO.OrganizerSpecificTicket(t.getTicketCode(),
@@ -95,8 +103,16 @@ public class TicketController {
                 ,HttpStatus.FOUND
         );
     }
+
+    @PostMapping("/organizer/events/{eventId}/check-in")
+    public void checkIn(
+            @PathVariable UUID eventId,
+            @RequestBody TicketsDTO.CheckInRequest request
+            ) {
+        ResponseEntity.ok(ticketService.checkIn(request.ticketCode(), eventId));
+    }
     
-    @GetMapping("/customer/all")
+    @GetMapping("/customer/{customer}")
     public ResponseEntity<List<TicketsDTO.CustomerTicket>> getTicketsAcrossEvents(@RequestParam UUID customer) {
         return new ResponseEntity<>(
                 ticketService.getCustomerTickets(customer).stream().map(
@@ -115,8 +131,9 @@ public class TicketController {
         );
     }
 
-    @GetMapping("/customer/{ticket_code}")
-    public ResponseEntity<TicketsDTO.CustomerTicket> getTicketsAcrossEvents(@PathVariable String ticket_code, @RequestParam UUID customer) {
+    @GetMapping("/customer/{ticket_code}{customer}")
+    public ResponseEntity<TicketsDTO.CustomerTicket> getTicketsAcrossEvents(@PathVariable String ticket_code,
+                                                                            @PathVariable UUID customer) {
         var ticket = ticketService.getTicketForCustomer(ticket_code, customer);
         return new ResponseEntity<>(new TicketsDTO.CustomerTicket(
                                 ticket.getTicketCode(),

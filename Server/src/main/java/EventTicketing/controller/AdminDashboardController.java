@@ -56,7 +56,7 @@ public class AdminDashboardController {
 
     @GetMapping("/organizer-applications")
     public ResponseEntity<List<OrganizerApplicationDto.Response>> listOrganizerApplications(
-            @RequestParam(required = false) OrganizerApplicationStatus status) {
+            @RequestParam OrganizerApplicationStatus status) {
         return ResponseEntity.ok(organizerApplicationService.list(status));
     }
 
@@ -71,13 +71,13 @@ public class AdminDashboardController {
     public ResponseEntity<OrganizerApplicationDto.Response> rejectOrganizerApplication(
             @PathVariable UUID id,
             @AuthenticationPrincipal User admin,
-            @RequestBody(required = false) OrganizerApplicationDto.RejectRequest request) {
+            @RequestBody OrganizerApplicationDto.RejectRequest request) {
         return ResponseEntity.ok(organizerApplicationService.reject(id, admin, request));
     }
 
     @GetMapping("/venues")
     public ResponseEntity<List<VenueDto.Response>> listVenueRequests(
-            @RequestParam(required = false) Venue.Status status) {
+            @RequestParam Venue.Status status) {
         return ResponseEntity.ok(venueService.listPendingOrAll(status));
     }
 

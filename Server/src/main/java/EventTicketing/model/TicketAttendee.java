@@ -13,11 +13,13 @@ public class TicketAttendee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @UuidGenerator
     private UUID uuid;
 
+    @Column(name = "ticket_id", nullable = false)
+    @JoinColumn(name = "ticket_id", nullable = false)
     private UUID ticketId;
 
     @Column(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id", nullable = false)
     private UUID customerId;
 }
