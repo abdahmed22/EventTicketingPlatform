@@ -47,8 +47,11 @@ public class SecurityConfig {
                 "/api/auth/register",
                 "/api/auth/login",
                 "/api/register/organizer-application")
+                "/api/register",
+                "/api/register/**",
+                "/api/login",
+                "/api/organizer-application")
             .permitAll()
-
             .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
             .requestMatchers("/error").permitAll()
             .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER", "ADMIN")

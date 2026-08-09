@@ -1,0 +1,108 @@
+<div class="form-page">
+  <div class="form-card">
+    <div class="back-link">
+      <a routerLink="/organizer/events">← Back to My Events</a>
+    </div>
+
+    <h1>{{ isEditMode() ? 'Edit Event Details' : 'Create New Event' }}</h1>
+    <p class="form-subtitle">
+      {{ isEditMode() ? 'Update your draft event information below.' : 'Events are created in DRAFT status. Add seat categories before publishing.' }}
+    </p>
+
+    @if (!loadingVenues() && approvedVenues().length === 0) {
+      <div class="banner banner-warning">
+        <strong>⚠️ No Approved Venues Available</strong>
+        @if (hasPendingVenues()) {
+          <p>
+            Your venue request is currently <strong>PENDING Admin approval</strong>. Per system specifications (§4.4), venues must be reviewed and approved by an Admin before they can be selected for event creation.
+          </p>
+        } @else {
+          <p>
+            You cannot create an event without an approved venue. Please submit a venue registration request first. Once approved by an Admin, it will be available here.
+          </p>
+        }
+        <a routerLink="/organizer/venues" class="btn btn-sm btn-primary">Manage Venue Requests</a>
+      </div>
+    }
+
+    @if (eventForm().invalid() && eventForm().errors().length) {
+      @for (error of eventForm().errors(); track error) {
+        <p class="form-error">{{ error.message }}</p>
+      }
+    }
+
+    <form [formRoot]="eventForm">
+      <div class="form-field">
+        <label for="title">Event Title *</label>
+        <input id="title" type="text" [formField]="eventForm.title" placeholder="e.g. Summer Music Festival 2026" />
+        @if (eventForm.title().touched() && eventForm.title().invalid()) {
+          @for (error of eventForm.title().errors(); track error) {
+            <div class="field-error">{{ error.message }}</div>
+          }
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="category">Category *</label>
+        <select id="category" [formField]="eventForm.category">
+          @for (cat of categories; track cat) {
+            <option [value]="cat">{{ cat }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="eventDate">Event Date *</label>
+          <input id="eventDate" type="date" [formField]="eventForm.eventDate" />
+          @if (eventForm.eventDate().touched() && eventForm.eventDate().invalid()) {
+            @for (error of eventForm.eventDate().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
+          }
+        </div>
+
+        <div class="form-field">
+          <label for="eventTime">Start Time *</label>
+          <input id="eventTime" type="time" [formField]="eventForm.eventTime" />
+          @if (eventForm.eventTime().touched() && eventForm.eventTime().invalid()) {
+            @for (error of eventForm.eventTime().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
+          }
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="venueId">Venue (APPROVED only) *</label>
+        <select id="venueId" [formField]="eventForm.venueId">
+          <option value="">-- Select an Approved Venue --</option>
+          @for (venue of approvedVenues(); track venue.id) {
+            <option [value]="venue.id">{{ venue.name }} (Capacity: {{ venue.capacity }}, {{ venue.address }})</option>
+          }
+        </select>
+        @if (eventForm.venueId().touched() && eventForm.venueId().invalid()) {
+          @for (error of eventForm.venueId().errors(); track error) {
+            <div class="field-error">{{ error.message }}</div>
+          }
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="description">Description (optional)</label>
+        <textarea id="description" rows="4" [formField]="eventForm.description" placeholder="Provide event details, schedule, highlights..."></textarea>
+      </div>
+
+      <div class="form-actions">
+        <a routerLink="/organizer/events" class="btn btn-ghost">Cancel</a>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="eventForm().submitting() || approvedVenues().length === 0"
+        >
+          {{ eventForm().submitting() ? 'Saving...' : (isEditMode() ? 'Update Event' : 'Create Event (Draft)') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
