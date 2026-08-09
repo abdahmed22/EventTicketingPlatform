@@ -4,6 +4,7 @@ import EventTicketing.dto.TicketsDTO;
 import EventTicketing.model.Ticket;
 import EventTicketing.service.TicketService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,6 @@ public class TicketController {
     
     TicketService ticketService;
     
-    // FOR ADMIN
     @GetMapping("/admin/{uuid}")
     public ResponseEntity<TicketsDTO.AdminTicketResponse> getTicket(@PathVariable("uuid") String uuid) {
         Ticket t = ticketService.getTicketForAdmin(UUID.fromString(uuid));
@@ -70,4 +70,66 @@ public class TicketController {
     public ResponseEntity<Integer> editTicket(@PathVariable("ticketUUID") UUID ticket, @RequestBody TicketsDTO.Request newValues) {
         return new ResponseEntity<>(ticketService.editTicket(ticket, newValues), HttpStatus.ACCEPTED);
     }
+    
+    @GetMapping("/organizer/{event_uuid}")
+    public ResponseEntity<List<TicketsDTO.OrganizerSpecificEventTickets>> organizerGetEventTickets(@PathVariable UUID evnt) {
+        var tickets = ticketService.getEventTickets(evnt);
+        return new ResponseEntity<>(
+                tickets.stream().map(
+                        (t) -> {
+                            return new TicketsDTO.OrganizerSpecificEventTickets(t.getTicketCode(),
+                                    t.getCreatedAt(), t.getSeat(), t.getVenue(), t.getUserOwnerUUID(),
+                                    t.getTotalPrice(), t.getStatus());
+                        }
+                ).toList(), HttpStatus.FOUND
+        );
+    }
+
+    @GetMapping("/organizer/{event_uuid}")
+    public ResponseEntity<TicketsDTO.OrganizerSpecificTicket> organizerGetSpecificTicketInEvent(@PathVariable UUID event, @RequestParam String ticket_code) {
+        var t = ticketService.getTicketForOrganizer(ticket_code, event);
+        return new ResponseEntity<>(
+                new TicketsDTO.OrganizerSpecificTicket(t.getTicketCode(),
+                                    t.getCreatedAt(), t.getSeat(), t.getVenue(), t.getUserOwnerUUID(),
+                                    t.getTotalPrice(), t.getStatus())
+                ,HttpStatus.FOUND
+        );
+    }
+    
+    @GetMapping("/customer/all")
+    public ResponseEntity<List<TicketsDTO.CustomerTicket>> getTicketsAcrossEvents(@RequestParam UUID customer) {
+        return new ResponseEntity<>(
+                ticketService.getCustomerTickets(customer).stream().map(
+                        (ticket) -> new TicketsDTO.CustomerTicket(
+                                ticket.getTicketCode(),
+                                ticket.getCreatedAt(),
+                                ticket.getBookingId(),
+                                ticket.getSeat(),
+                                ticket.getEvnt(),
+                                ticket.getVenue(),
+                                ticket.getUserOwnerUUID(),
+                                ticket.getTotalPrice(),
+                                ticket.getStatus()
+                        )
+                ).toList(), HttpStatus.FOUND
+        );
+    }
+
+    @GetMapping("/customer/{ticket_code}")
+    public ResponseEntity<TicketsDTO.CustomerTicket> getTicketsAcrossEvents(@PathVariable String ticket_code, @RequestParam UUID customer) {
+        var ticket = ticketService.getTicketForCustomer(ticket_code, customer);
+        return new ResponseEntity<>(new TicketsDTO.CustomerTicket(
+                                ticket.getTicketCode(),
+                                ticket.getCreatedAt(),
+                                ticket.getBookingId(),
+                                ticket.getSeat(),
+                                ticket.getEvnt(),
+                                ticket.getVenue(),
+                                ticket.getUserOwnerUUID(),
+                                ticket.getTotalPrice(),
+                                ticket.getStatus()
+                        ) , HttpStatus.FOUND
+        );
+    }
+    
 }

@@ -1,5 +1,6 @@
 package EventTicketing.dto;
 
+import EventTicketing.model.Ticket;
 import EventTicketing.model.TicketAttendee;
 import liquibase.exception.CustomPreconditionErrorException;
 
@@ -10,8 +11,18 @@ import java.util.UUID;
 
 public abstract class TicketsDTO {
     
-    public record CustomerTicket(String eventName, Date eventDate, Time eventTIme, String venueName, String ticketCode, Double price, String status, List<TicketAttendee> ticketAttendees) {}
+    public record CustomerTicket(String ticketCode,
+                                 Date createdAt,
+                                 UUID bookingId,
+                                 UUID seat,
+                                 UUID evnt,
+                                 UUID venue,
+                                 UUID userOwnerUUID,
+                                 Double totalPrice,
+                                 String status) {}
+    
     public record OrganizerTicketResponse(String ticketCode, List<String> contactInfo, String status) {}
+    
     public record AdminTicketResponse(UUID uuid,
                                       String ticketCode,
                                       Date createdAt,
@@ -22,6 +33,22 @@ public abstract class TicketsDTO {
                                       UUID userOwnerUUID,
                                       Double totalPrice,
                                       String status) {}
+
+    public record OrganizerSpecificEventTickets(String ticketCode,
+                                                Date createdAt,
+                                                UUID seat,
+                                                UUID venue,
+                                                UUID userOwnerUUID,
+                                                Double totalPrice,
+                                                String status) {}
+
+    public record OrganizerSpecificTicket(String ticketCode,
+                                                Date createdAt,
+                                                UUID seat,
+                                                UUID venue,
+                                                UUID userOwnerUUID,
+                                                Double totalPrice,
+                                                String status) {}
     
     public record Request(String ticketCode, Date createdAt,
                           UUID bookingId,
