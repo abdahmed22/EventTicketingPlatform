@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { guestGuard } from './guards/guest.guard';
-import { adminGuard } from './guards/auth.guard';
+import { adminGuard, customerGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -29,6 +29,22 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/admin/organizer-applications-review/organizer-applications-review.component').then(
         (m) => m.OrganizerApplicationsReviewComponent
+      )
+  },
+  {
+
+    path: 'events/:id',
+    loadComponent: () =>
+      import('./components/events/event-detail/event-detail.component').then(
+        (m) => m.EventDetailComponent
+      )
+  },
+  {
+    path: 'bookings',
+    canActivate: [customerGuard],
+    loadComponent: () =>
+      import('./components/booking/my-bookings/my-bookings.component').then(
+        (m) => m.MyBookingsComponent
       )
   }
 ];
