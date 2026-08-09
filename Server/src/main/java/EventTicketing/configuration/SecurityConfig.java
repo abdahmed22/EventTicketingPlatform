@@ -44,16 +44,22 @@ public class SecurityConfig {
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers(
+                "/api/auth/register",
+                "/api/auth/login",
+                "/api/register/organizer-application",
                 "/api/register",
+                "/api/register/**",
                 "/api/login",
                 "/api/organizer-application")
             .permitAll()
-
             .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
             .requestMatchers("/error").permitAll()
             .requestMatchers("/api/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
             .requestMatchers("/api/organizer/**").hasAnyRole("ORGANIZER", "ADMIN")
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/tickets/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/tickets/organizer/**").hasAnyRole("ORGANIZER", "ADMIN")
+                .requestMatchers("/api/tickets/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
             .anyRequest().authenticated())
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

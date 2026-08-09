@@ -1,0 +1,84 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <h1>My Events</h1>
+      <p class="subtitle">
+        Manage your events, add seat categories, publish drafts, and track attendees.
+      </p>
+    </div>
+    <a routerLink="/organizer/events/new" class="btn btn-primary">
+      + Create New Event
+    </a>
+  </header>
+
+  <div class="filter-tabs">
+    @for (option of statusOptions; track option) {
+      <button
+        type="button"
+        class="filter-tab"
+        [class.active]="statusFilter() === option"
+        (click)="setFilter(option)"
+      >
+        {{ option }}
+      </button>
+    }
+  </div>
+
+  @if (successMessage()) {
+    <div class="banner banner-success">{{ successMessage() }}</div>
+  }
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-box">Loading events...</div>
+  } @else if (events().length === 0) {
+    <div class="empty-state">
+      <p>No events found matching this status.</p>
+      <a routerLink="/organizer/events/new" class="btn btn-primary">+ Create an Event</a>
+    </div>
+  } @else {
+    <div class="events-list">
+      @for (event of events(); track event.id) {
+        <div class="event-row-card">
+          <div class="event-main-info">
+            <div class="title-row">
+              <h2>{{ event.title }}</h2>
+              <span class="status-badge" [class]="'status-' + event.status.toLowerCase()">
+                {{ event.status }}
+              </span>
+              <span class="category-badge">{{ event.category }}</span>
+            </div>
+
+            <p class="event-date-text">
+              📅 {{ event.eventDate | date: 'fullDate' }} at {{ event.eventTime }}
+            </p>
+          </div>
+
+          <div class="event-actions">
+            <a [routerLink]="['/events', event.id]" class="btn btn-ghost">
+              View & Seats
+            </a>
+
+            @if (event.status === 'DRAFT') {
+              <a [routerLink]="['/organizer/events', event.id, 'edit']" class="btn btn-secondary">
+                Edit Details
+              </a>
+              <button type="button" class="btn btn-success" (click)="publishEvent(event.id)">
+                Publish
+              </button>
+            }
+
+            @if (event.status !== 'CANCELLED') {
+              <button type="button" class="btn btn-danger" (click)="cancelEvent(event.id)">
+                Cancel
+              </button>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

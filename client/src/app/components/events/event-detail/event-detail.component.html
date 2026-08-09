@@ -1,203 +1,263 @@
+<div class="detail-page">
+  <div class="back-link">
+    <a routerLink="/" class="link-btn">← Back to All Events</a>
+  </div>
 
-<div class="event-detail-page">
-
-  @if (loading()) {
-    <div class="loading">
-      Loading...
-    </div>
+  @if (actionSuccess()) {
+    <div class="banner banner-success">{{ actionSuccess() }}</div>
   }
 
   @if (error()) {
-    <div class="error-message">
-      {{ error() }}
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">Loading event details...</div>
+  } @else if (event()) {
+    <div class="detail-grid">
+      <!-- Main Event Details -->
+      <div class="main-column">
+        <div class="detail-card">
+          <div class="detail-header">
+            <span class="category-pill">{{ event()!.category }}</span>
+            <span class="status-pill" [class]="'status-' + event()!.status.toLowerCase()">
+              {{ event()!.status }}
+            </span>
+          </div>
+
+          <h1 class="event-title">{{ event()!.title }}</h1>
+
+          <div class="meta-pills">
+            <div class="meta-item">
+              <span class="icon">📅</span>
+              <span>{{ event()!.eventDate | date: 'fullDate' }} at {{ event()!.eventTime }}</span>
+            </div>
+          </div>
+
+          @if (event()!.description) {
+            <div class="description-box">
+              <h3>About this event</h3>
+              <p>{{ event()!.description }}</p>
+            </div>
+          }
+
+          <!-- Organizer / Admin Actions Bar -->
+          @if (authService.isOrganizer() || authService.isAdmin()) {
+            <div class="management-bar">
+              <h3>Organizer & Admin Actions</h3>
+              <div class="action-buttons">
+                @if (event()!.status === 'DRAFT') {
+                  <button type="button" class="btn btn-success" (click)="publishEvent()">
+                    🚀 Publish Event
+                  </button>
+                }
+                @if (event()!.status !== 'CANCELLED') {
+                  <button type="button" class="btn btn-secondary" (click)="openSeatModal()">
+                    ➕ Add Seat Category
+                  </button>
+                  <button type="button" class="btn btn-danger" (click)="cancelEvent()">
+                    🚫 Cancel Event
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Seat Categories Section -->
+        <div class="section-card">
+          <div class="section-title-row">
+            <h2>Seat Categories & Pricing</h2>
+            @if ((authService.isOrganizer() || authService.isAdmin()) && event()!.status !== 'CANCELLED') {
+              <button type="button" class="btn btn-sm btn-primary" (click)="openSeatModal()">
+                + Add Category
+              </button>
+            }
+          </div>
+
+          @if (event()!.seatCategories.length === 0) {
+            <div class="empty-seats">
+              <p>No seat categories have been created for this event yet.</p>
+              @if (event()!.status === 'DRAFT') {
+                <span class="warn-text">⚠️ An event must have at least one seat category before it can be published.</span>
+              }
+            </div>
+          } @else {
+            <div class="seat-list">
+              @for (sc of event()!.seatCategories; track sc.id) {
+                <div class="seat-card">
+                  <div class="seat-main">
+                    <div class="seat-name-row">
+                      <span class="seat-name">{{ sc.name }}</span>
+                      <span class="seat-price">{{ sc.price | currency }}</span>
+                    </div>
+
+                    <div class="seat-info">
+                      <span>Available: <strong>{{ sc.availableSeats }}</strong> / {{ sc.totalSeats }}</span>
+                      @if (sc.seatingCapacity > 1) {
+                        <span class="capacity-tag">Capacity: {{ sc.seatingCapacity }} persons / seat</span>
+                      }
+                    </div>
+
+                    <!-- Availability Progress Bar -->
+                    <div class="progress-bar-container">
+                      <div
+                        class="progress-bar-fill"
+                        [style.width.%]="getAvailabilityPercent(sc)"
+                        [class.low-stock]="getAvailabilityPercent(sc) <= 20"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Sidebar Column (Venue & Booking Widget) -->
+      <div class="sidebar-column">
+        <!-- Customer Booking Widget -->
+        @if (event()!.status === 'PUBLISHED' && event()!.seatCategories.length > 0) {
+          <div class="venue-card booking-widget">
+            <h3>🎟️ Reserve Seats</h3>
+
+            <div class="form-field">
+              <label for="seatCategory">Seat Category</label>
+              <select
+                id="seatCategory"
+                [value]="selectedSeatCategoryId()"
+                (change)="onSeatCategoryChange($any($event.target).value)"
+              >
+                @for (category of event()!.seatCategories; track category.id) {
+                  <option [value]="category.id" [disabled]="category.availableSeats <= 0">
+                    {{ category.name }} - {{ category.price | currency }}
+                    {{ category.availableSeats > 0 ? '(' + category.availableSeats + ' available)' : '- Sold Out' }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="quantity">Quantity</label>
+              <input
+                id="quantity"
+                type="number"
+                min="1"
+                [max]="selectedCategory()?.availableSeats ?? 1"
+                [value]="quantity()"
+                (input)="onQuantityChange(+$any($event.target).value)"
+              />
+            </div>
+
+            @if (selectedCategory(); as category) {
+              <div class="total-price-box">
+                <span>Total Price:</span>
+                <strong>{{ category.price * quantity() | currency }}</strong>
+              </div>
+            }
+
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              [disabled]="
+                reserving() ||
+                !selectedCategory() ||
+                selectedCategory()!.availableSeats <= 0 ||
+                quantity() < 1 ||
+                !Number.isInteger(quantity()) ||
+                quantity() > selectedCategory()!.availableSeats
+              "
+              (click)="reserve()"
+            >
+              {{ reserving() ? 'Reserving...' : 'Reserve Seats' }}
+            </button>
+          </div>
+        }
+
+        <div class="venue-card">
+          <div class="venue-header">
+            <span class="venue-icon">🏛️</span>
+            <div>
+              <span class="venue-label">Venue Location</span>
+              <h3 class="venue-name">{{ event()!.venue.name }}</h3>
+            </div>
+          </div>
+
+          <div class="venue-body">
+            <p class="venue-address">📍 {{ event()!.venue.address }}</p>
+            <div class="venue-capacity">
+              <span>Total Venue Capacity</span>
+              <strong>{{ event()!.venue.capacity }} Seats</strong>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   }
 
-  @if (event(); as currentEvent) {
+  <!-- Add Seat Category Modal -->
+  @if (showSeatModal()) {
+    <div class="modal-overlay" (click)="closeSeatModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h2>Add Seat Category</h2>
+        <p class="modal-subtitle">Define seat category name, pricing, and total available seats.</p>
 
-    <section class="event-card">
-
-      <div class="event-header">
-
-        <h1>
-          {{ currentEvent.title }}
-        </h1>
-
-        <p>
-          {{ currentEvent.description }}
-        </p>
-
-      </div>
-
-      <div class="event-info">
-
-        <p>
-          <strong>Date:</strong>
-          {{ currentEvent.eventDate }}
-        </p>
-
-        <p>
-          <strong>Time:</strong>
-          {{ currentEvent.eventTime }}
-        </p>
-
-        <p>
-          <strong>Category:</strong>
-          {{ currentEvent.category }}
-        </p>
-
-        <p>
-          <strong>Status:</strong>
-          {{ currentEvent.status }}
-        </p>
-
-      </div>
-
-    </section>
-
-
-    <section class="booking-card">
-
-      <h2>
-        Reserve Seats
-      </h2>
-
-
-      <div class="form-group">
-
-        <label for="seatCategory">
-          Seat Category
-        </label>
-
-        <select
-          id="seatCategory"
-          [value]="selectedSeatCategoryId()"
-          (change)="
-            onSeatCategoryChange(
-              $any($event.target).value
-            )
-          "
-        >
-
-          <option value="">
-            Select a seat category
-          </option>
-
-          @for (
-            category of seatCategories();
-            track category.id
-          ) {
-
-            <option
-              [value]="category.id"
-              [disabled]="category.availableSeats <= 0"
-            >
-
-              {{ category.name }}
-              -
-              {{ category.price | currency }}
-
-              @if (category.availableSeats > 0) {
-
-                -
-                {{ category.availableSeats }}
-                seats available
-
-              } @else {
-
-                - Sold Out
-
-              }
-
-            </option>
-
+        @if (seatForm().invalid() && seatForm().errors().length) {
+          @for (error of seatForm().errors(); track error) {
+            <p class="form-error">{{ error.message }}</p>
           }
-
-        </select>
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label for="quantity">
-          Quantity
-        </label>
-
-        <input
-          id="quantity"
-          type="number"
-          min="1"
-          [max]="selectedCategory()?.availableSeats ?? 1"
-          [value]="quantity()"
-          (input)="
-            onQuantityChange(
-              +$any($event.target).value
-            )
-          "
-        />
-
-      </div>
-
-
-      @if (selectedCategory(); as category) {
-
-        <div class="availability">
-
-          Available seats:
-
-          <strong>
-            {{ category.availableSeats }}
-          </strong>
-
-        </div>
-
-
-        <div class="total-price">
-
-          Total:
-
-          <strong>
-            {{
-              category.price * quantity()
-                | currency
-            }}
-          </strong>
-
-        </div>
-
-      }
-
-
-      <button
-        type="button"
-        class="reserve-btn"
-        [disabled]="
-          loading() ||
-          !selectedCategory() ||
-          selectedCategory()!.availableSeats <= 0 ||
-          quantity() < 1 ||
-          !Number.isInteger(quantity()) ||
-          quantity() > selectedCategory()!.availableSeats
-        "
-        (click)="reserve()"
-      >
-
-        @if (loading()) {
-
-          Reserving...
-
-        } @else {
-
-          Reserve Seats
-
         }
 
-      </button>
+        <form [formRoot]="seatForm">
+          <div class="form-field">
+            <label for="seatName">Category Name (e.g. VIP, Standard)</label>
+            <input id="seatName" type="text" [formField]="seatForm.name" placeholder="VIP / Regular" />
+            @if (seatForm.name().touched() && seatForm.name().invalid()) {
+              @for (error of seatForm.name().errors(); track error) {
+                <div class="field-error">{{ error.message }}</div>
+              }
+            }
+          </div>
 
-    </section>
+          <div class="form-field">
+            <label for="seatPrice">Price ($)</label>
+            <input id="seatPrice" type="number" step="0.01" [formField]="seatForm.price" />
+            @if (seatForm.price().touched() && seatForm.price().invalid()) {
+              @for (error of seatForm.price().errors(); track error) {
+                <div class="field-error">{{ error.message }}</div>
+              }
+            }
+          </div>
 
+          <div class="form-field">
+            <label for="totalSeats">Total Seats (> 0)</label>
+            <input id="totalSeats" type="number" [formField]="seatForm.totalSeats" />
+            @if (seatForm.totalSeats().touched() && seatForm.totalSeats().invalid()) {
+              @for (error of seatForm.totalSeats().errors(); track error) {
+                <div class="field-error">{{ error.message }}</div>
+              }
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="seatingCapacity">Seating Capacity per ticket (default 1)</label>
+            <input id="seatingCapacity" type="number" [formField]="seatForm.seatingCapacity" />
+            @if (seatForm.seatingCapacity().touched() && seatForm.seatingCapacity().invalid()) {
+              @for (error of seatForm.seatingCapacity().errors(); track error) {
+                <div class="field-error">{{ error.message }}</div>
+              }
+            }
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" (click)="closeSeatModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" [disabled]="submittingCategory()">
+              {{ submittingCategory() ? 'Saving...' : 'Add Category' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   }
-
 </div>
-

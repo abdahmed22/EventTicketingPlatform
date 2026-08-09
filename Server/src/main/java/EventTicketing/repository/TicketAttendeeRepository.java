@@ -3,8 +3,9 @@ package EventTicketing.repository;
 import EventTicketing.model.TicketAttendee;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface TicketAttendeeRepository  extends JpaRepository<TicketAttendee, UUID> {
-    
+    List<TicketAttendee> getByTicketId(UUID ticketId);
 }

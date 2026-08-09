@@ -22,6 +22,10 @@ public class VenueDto {
             @NotNull(message = "Capacity is required") @Min(value = 1, message = "Capacity must be greater than 0") Integer capacity) {
     }
 
+    public record RejectRequest(
+            String reason) {
+    }
+
     public record Summary(
             UUID id,
             String name,

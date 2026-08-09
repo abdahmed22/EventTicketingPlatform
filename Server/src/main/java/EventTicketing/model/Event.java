@@ -45,12 +45,18 @@ public class Event {
     @Column(name = "status", nullable = false)
     private Status status;
 
+    @Column(name = "venue_id", nullable = false)
+    private UUID venueId;
+
+    @Column(name = "organizer_id", nullable = false)
+    private UUID organizerId;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "venue_id", nullable = false)
+    @JoinColumn(name = "venue_id", nullable = false, insertable = false, updatable = false)
     private Venue venue;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organizer_id", nullable = false)
+    @JoinColumn(name = "organizer_id", nullable = false, insertable = false, updatable = false)
     private User organizer;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -85,11 +91,37 @@ public class Event {
         if (status == null) {
             status = Status.DRAFT;
         }
+        if (venueId == null && venue != null) {
+            venueId = venue.getId();
+        }
+        if (organizerId == null && organizer != null) {
+            organizerId = organizer.getId();
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        if (venueId == null && venue != null) {
+            venueId = venue.getId();
+        }
+        if (organizerId == null && organizer != null) {
+            organizerId = organizer.getId();
+        }
+    }
+
+    public void setVenue(Venue venue) {
+        this.venue = venue;
+        if (venue != null) {
+            this.venueId = venue.getId();
+        }
+    }
+
+    public void setOrganizer(User organizer) {
+        this.organizer = organizer;
+        if (organizer != null) {
+            this.organizerId = organizer.getId();
+        }
     }
 
     // Bridge for eventService: combines eventDate + eventTime into a single LocalDateTime

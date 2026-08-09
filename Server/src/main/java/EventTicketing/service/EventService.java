@@ -15,7 +15,6 @@ import EventTicketing.model.enums.UserRole;
 import EventTicketing.repository.BookingRepository;
 import EventTicketing.repository.EventRepository;
 import EventTicketing.repository.SeatCategoryRepository;
-import EventTicketing.repository.UserRepository;
 import EventTicketing.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -33,14 +32,13 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class EventService {
 
     private final EventRepository eventRepository;
     private final VenueRepository venueRepository;
-    private final SeatCategoryRepository seatCategoryRepository;
     private final BookingRepository bookingRepository;
     private final BookingService bookingService;
+    private final SeatCategoryRepository seatCategoryRepository;
 
     @Transactional
     public EventDto.Response create(EventDto.CreateRequest request, User organizer) {
@@ -92,6 +90,26 @@ public class EventService {
         List<EventDto.Summary> content = publishedPage.getContent().stream().map(this::toSummary).toList();
         return new PageResponse<>(content, publishedPage.getNumber(), publishedPage.getSize(),
                 publishedPage.getTotalElements(), publishedPage.getTotalPages());
+    }
+
+    public PageResponse<EventDto.Summary> listOrganizerEvents(
+            User organizer,
+            Event.Status status,
+            Event.Category category,
+            int page,
+            int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Event> results = eventRepository.findFilteredForAdmin(
+                status, category, null, organizer.getId(), null, null, null, null, pageable);
+
+        List<EventDto.Summary> content = results.getContent().stream().map(this::toSummary).toList();
+        return new PageResponse<>(content, results.getNumber(), results.getSize(),
+                results.getTotalElements(), results.getTotalPages());
+    }
+
+    public EventDto.Response getOrganizerById(UUID eventId, User organizer) {
+        Event event = findOwnedEvent(eventId, organizer);
+        return toResponse(event);
     }
 
     public EventDto.Response getPublicById(UUID eventId) {

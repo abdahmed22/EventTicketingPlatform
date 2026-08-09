@@ -138,7 +138,9 @@ class BookingConcurrencyTest {
                 .eventTime(LocalTime.of(19, 0))
                 .status(Event.Status.PUBLISHED)
                 .venue(venue)
+                .venueId(venue.getId())
                 .organizer(organizer)
+                .organizerId(organizer.getId())
                 .build();
         event = eventRepository.save(event);
         createdEventIds.add(event.getId());
