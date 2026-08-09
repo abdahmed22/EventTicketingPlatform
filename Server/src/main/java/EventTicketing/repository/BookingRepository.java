@@ -18,6 +18,4 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
             BookingStatus status,
             Instant time
     );
-    List<Booking> findByEventIdAndStatusIn(UUID eventId, List<BookingStatus> statuses);
-    boolean existsByEventId(UUID eventId);
 }

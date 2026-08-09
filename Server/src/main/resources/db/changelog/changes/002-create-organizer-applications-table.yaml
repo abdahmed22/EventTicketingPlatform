@@ -2,11 +2,6 @@ databaseChangeLog:
   - changeSet:
       id: 002-create-organizer-applications-table
       author: Abd El Rahman Ahmed Mahmoud
-      preConditions:
-        - onFail: MARK_RAN
-        - not:
-            - tableExists:
-                tableName: organizer_applications
       changes:
         - createTable:
             tableName: organizer_applications

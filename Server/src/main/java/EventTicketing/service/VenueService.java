@@ -1,11 +1,12 @@
 package EventTicketing.service;
 
+import EventTicketing.dto.DashboardDTO;
 import EventTicketing.dto.VenueDto;
 import EventTicketing.exception.ForbiddenActionException;
 import EventTicketing.exception.ResourceNotFoundException;
 import EventTicketing.model.User;
 import EventTicketing.model.Venue;
-import EventTicketing.repository.EventRepository;
+import EventTicketing.model.enums.UserRole;
 import EventTicketing.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import java.util.UUID;
 public class VenueService {
 
     private final VenueRepository venueRepository;
-    private final EventRepository eventRepository;
 
     @Transactional
     public VenueDto.Response submit(User organizer, VenueDto.CreateRequest request) {
@@ -35,12 +35,7 @@ public class VenueService {
         return VenueDto.Response.from(venueRepository.save(venue));
     }
 
-    public List<VenueDto.Response> listMyVenues(User organizer, Venue.Status status) {
-        if (status == Venue.Status.APPROVED) {
-            return venueRepository.findByStatus(Venue.Status.APPROVED).stream()
-                    .map(VenueDto.Response::from)
-                    .toList();
-        }
+    public List<VenueDto.Response> listMyVenues(User organizer) {
         return venueRepository.findByRequestedBy(organizer).stream()
                 .map(VenueDto.Response::from)
                 .toList();
@@ -50,45 +45,15 @@ public class VenueService {
         if (status == null) {
             return venueRepository.findAll().stream().map(VenueDto.Response::from).toList();
         }
-        return venueRepository.findByStatus(status).stream()
+        return venueRepository.findAll().stream()
+                .filter(venue -> venue.getStatus() == status)
                 .map(VenueDto.Response::from)
                 .toList();
     }
 
     @Transactional
-    public VenueDto.Response adminCreate(User admin, VenueDto.CreateRequest request) {
-        Venue venue = Venue.builder()
-                .name(request.name())
-                .address(request.address())
-                .capacity(request.capacity())
-                .requestedBy(admin)
-                .status(Venue.Status.APPROVED)
-                .reviewedAt(LocalDateTime.now())
-                .reviewedBy(admin)
-                .build();
-        return VenueDto.Response.from(venueRepository.save(venue));
-    }
-
-    @Transactional
-    public VenueDto.Response adminUpdate(UUID venueId, VenueDto.UpdateRequest request) {
-        Venue venue = getVenue(venueId);
-        venue.setName(request.name());
-        venue.setAddress(request.address());
-        venue.setCapacity(request.capacity());
-        return VenueDto.Response.from(venueRepository.save(venue));
-    }
-
-    @Transactional
-    public void adminDelete(UUID venueId) {
-        Venue venue = getVenue(venueId);
-        if (eventRepository.existsByVenueId(venueId)) {
-            throw new ForbiddenActionException("Venue cannot be deleted because it is linked to one or more events.");
-        }
-        venueRepository.delete(venue);
-    }
-
-    @Transactional
     public VenueDto.Response approve(UUID venueId, User admin) {
+        ensureAdmin(admin);
         Venue venue = getVenue(venueId);
         venue.setStatus(Venue.Status.APPROVED);
         venue.setReviewedAt(LocalDateTime.now());
@@ -97,7 +62,8 @@ public class VenueService {
     }
 
     @Transactional
-    public VenueDto.Response reject(UUID venueId, User admin) {
+    public VenueDto.Response reject(UUID venueId, User admin, VenueDto.RejectRequest request) {
+        ensureAdmin(admin);
         Venue venue = getVenue(venueId);
         venue.setStatus(Venue.Status.REJECTED);
         venue.setReviewedAt(LocalDateTime.now());
@@ -105,8 +71,37 @@ public class VenueService {
         return VenueDto.Response.from(venueRepository.save(venue));
     }
 
+    
     private Venue getVenue(UUID venueId) {
         return venueRepository.findById(venueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Venue not found with id: " + venueId));
+    }
+
+    private void ensureAdmin(User user) {
+        if (user.getRole() != UserRole.ADMIN) {
+            throw new ForbiddenActionException("Only admin users may perform this action.");
+        }
+    }
+
+    public List<DashboardDTO.PendingVenue> getPendingApplicationsForDashboard() {
+        return venueRepository.findByStatus((Venue.Status.PENDING)).stream()
+                .map(venue -> new DashboardDTO.PendingVenue(
+                        venue.getId(),
+                        venue.getName(),
+                        venue.getAddress(),
+                        venue.getCapacity(),
+                        venue.getRequestedBy() == null ? null : venue.getRequestedBy().getId(),
+                        venue.getRequestedBy() == null ? null : venue.getRequestedBy().getName()))
+                .toList();
+    }
+
+    // انا عامل ديه خاصه بالdashboard بس 
+    @Transactional
+    public VenueDto.Response rejectFromDashboard(UUID venueId, User admin) {
+        Venue venue = getVenue(venueId);
+        venue.setStatus(Venue.Status.REJECTED);
+        venue.setReviewedAt(LocalDateTime.now());
+        venue.setReviewedBy(admin);
+        return VenueDto.Response.from(venueRepository.save(venue));
     }
 }

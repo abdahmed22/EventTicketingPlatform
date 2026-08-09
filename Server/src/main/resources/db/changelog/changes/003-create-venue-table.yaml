@@ -2,11 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: create-venue-status-enum
       author: mazen
-      preConditions:
-        - onFail: MARK_RAN
-        - not:
-            - tableExists:
-                tableName: venues
+
       changes:
         - sql:
             sql: |
@@ -19,11 +15,7 @@ databaseChangeLog:
   - changeSet:
       id: create-venues-table
       author: mazen
-      preConditions:
-        - onFail: MARK_RAN
-        - not:
-            - tableExists:
-                tableName: venues
+
       changes:
         - createTable:
                     tableName: venues
@@ -57,7 +49,7 @@ databaseChangeLog:
                             nullable: false
                       - column:
                           name: status
-                          type: VARCHAR(20)
+                          type: venue_status
                           constraints:
                             nullable: false
                       - column:

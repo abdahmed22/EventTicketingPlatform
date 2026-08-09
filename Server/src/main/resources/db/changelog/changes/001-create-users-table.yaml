@@ -2,11 +2,6 @@ databaseChangeLog:
   - changeSet:
       id: 001-create-users-table
       author: Abd El Rahman Ahmed Mahmoud
-      preConditions:
-        - onFail: MARK_RAN
-        - not:
-            - tableExists:
-                tableName: users
       changes:
         - createTable:
             tableName: users

@@ -1,9 +1,6 @@
 package EventTicketing.dto;
 
 import EventTicketing.model.Event;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -12,16 +9,7 @@ import java.util.UUID;
 
 public class EventDto {
     public record CreateRequest(
-            @NotBlank(message = "Title is required") @Size(max = 150, message = "Title must be at most 150 characters") String title,
-            String description,
-            @NotNull(message = "Category is required") Event.Category category,
-            @NotNull(message = "Event date is required") LocalDate eventDate,
-            @NotNull(message = "Event time is required") LocalTime eventTime,
-            @NotNull(message = "Venue is required") UUID venueId) {
-    }
-
-    public record UpdateRequest(
-            @Size(max = 150, message = "Title must be at most 150 characters") String title,
+            String title,
             String description,
             Event.Category category,
             LocalDate eventDate,
@@ -29,14 +17,13 @@ public class EventDto {
             UUID venueId) {
     }
 
-    public record AdminUpdateRequest(
-            @Size(max = 150, message = "Title must be at most 150 characters") String title,
+    public record UpdateRequest(
+            String title,
             String description,
             Event.Category category,
             LocalDate eventDate,
             LocalTime eventTime,
-            UUID venueId,
-            Event.Status status) {
+            UUID venueId) {
     }
 
     public record Summary(
@@ -61,7 +48,7 @@ public class EventDto {
             LocalDate eventDate,
             LocalTime eventTime,
             Event.Status status,
-            VenueDto.Summary venue,
+            UUID venueId,
             UUID organizerId,
             List<SeatCategoryDto.Summary> seatCategories,
             LocalDateTime createdAt,

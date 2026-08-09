@@ -1,5 +1,6 @@
 package EventTicketing.controller;
 
+
 import EventTicketing.dto.VenueDto;
 import EventTicketing.model.User;
 import EventTicketing.model.Venue;
@@ -17,8 +18,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class VenueController {
 
+public class VenueController {
     private final VenueService venueService;
 
     @GetMapping("/events/venues")
@@ -28,15 +29,13 @@ public class VenueController {
 
     @PostMapping("/organizer/venues")
     public ResponseEntity<VenueDto.Response> submit(@AuthenticationPrincipal User organizer,
-            @Valid @RequestBody VenueDto.CreateRequest request) {
+                                                    @Valid @RequestBody VenueDto.CreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(venueService.submit(organizer, request));
     }
 
     @GetMapping("/organizer/venues")
-    public ResponseEntity<List<VenueDto.Response>> listMyVenues(
-            @AuthenticationPrincipal User organizer,
-            @RequestParam(required = false) Venue.Status status) {
-        return ResponseEntity.ok(venueService.listMyVenues(organizer, status));
+    public ResponseEntity<List<VenueDto.Response>> listMyVenues(@AuthenticationPrincipal User organizer) {
+        return ResponseEntity.ok(venueService.listMyVenues(organizer));
     }
 
     @GetMapping("/admin/venues")
@@ -45,33 +44,17 @@ public class VenueController {
         return ResponseEntity.ok(venueService.listPendingOrAll(status));
     }
 
-    @PostMapping("/admin/venues")
-    public ResponseEntity<VenueDto.Response> adminCreate(@AuthenticationPrincipal User admin,
-            @Valid @RequestBody VenueDto.CreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(venueService.adminCreate(admin, request));
-    }
-
-    @PutMapping("/admin/venues/{id}")
-    public ResponseEntity<VenueDto.Response> adminUpdate(@PathVariable UUID id,
-            @Valid @RequestBody VenueDto.UpdateRequest request) {
-        return ResponseEntity.ok(venueService.adminUpdate(id, request));
-    }
-
-    @DeleteMapping("/admin/venues/{id}")
-    public ResponseEntity<Void> adminDelete(@PathVariable UUID id) {
-        venueService.adminDelete(id);
-        return ResponseEntity.noContent().build();
-    }
-
     @PostMapping("/admin/venues/{id}/approve")
     public ResponseEntity<VenueDto.Response> approve(@AuthenticationPrincipal User admin,
-            @PathVariable UUID id) {
+                                                     @PathVariable UUID id) {
         return ResponseEntity.ok(venueService.approve(id, admin));
     }
 
     @PostMapping("/admin/venues/{id}/reject")
     public ResponseEntity<VenueDto.Response> reject(@AuthenticationPrincipal User admin,
-            @PathVariable UUID id) {
-        return ResponseEntity.ok(venueService.reject(id, admin));
+                                                    @PathVariable UUID id,
+                                                    @RequestBody(required = false) VenueDto.RejectRequest request) {
+        return ResponseEntity.ok(venueService.reject(id, admin, request));
     }
+
 }

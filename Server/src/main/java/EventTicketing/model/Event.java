@@ -45,12 +45,18 @@ public class Event {
     @Column(name = "status", nullable = false)
     private Status status;
 
+    @Column(name = "venue_id", nullable = false)
+    private UUID venueId;
+
+    @Column(name = "organizer_id", nullable = false)
+    private UUID organizerId;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "venue_id", nullable = false)
+    @JoinColumn(name = "venue_id", nullable = false, insertable = false, updatable = false)
     private Venue venue;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organizer_id", nullable = false)
+    @JoinColumn(name = "organizer_id", nullable = false, insertable = false, updatable = false)
     private User organizer;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -2,11 +2,6 @@ databaseChangeLog:
   - changeSet:
       id: 006-create-booking-table
       author: Yousef
-      preConditions:
-        - onFail: MARK_RAN
-        - not:
-            - tableExists:
-                tableName: booking
       changes:
 
         - createTable:

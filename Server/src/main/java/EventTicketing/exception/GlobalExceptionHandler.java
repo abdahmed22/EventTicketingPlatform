@@ -61,11 +61,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "Invalid or expired token");
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
-        return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage());
-    }
-
     @ExceptionHandler({IllegalStateException.class, SeatUnavailableException.class, InvalidStateTransitionException.class})
     public ResponseEntity<ErrorResponse> handleBadRequestState(RuntimeException ex) {
         return build(HttpStatus.BAD_REQUEST, "INVALID_STATE", ex.getMessage());

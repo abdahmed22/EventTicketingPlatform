@@ -1,44 +1,66 @@
 package EventTicketing.model;
 
+
+import EventTicketing.model.enums.TicketStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.math.BigDecimal;
+import java.sql.Time;
+import java.time.Instant;
+import java.util.Date;
 import java.util.UUID;
 
-@Entity
 @Table(name = "tickets")
+@Entity
+@RequiredArgsConstructor
 @Data
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class Ticket {
 
     @Id
     @UuidGenerator
+    @Column(name = "uuid", nullable = false, updatable = false)
     private UUID uuid;
 
-    @Column(name = "ticket_code")
+    @Column(name = "ticket_code", unique = true)
     private String ticketCode;
 
     @Column(name = "creation_date")
-    private String createdAt;
+    private Instant createdAt;
 
-    @Column(name = "booking_id")
+    @JoinColumn(name = "booking_id", nullable = false)
     private UUID bookingId;
 
+    @JoinColumn(name = "seat", nullable = false)
     private UUID seat;
-
-    @Column(name = "event_id")
+    
+    @JoinColumn(name = "evnt", nullable = false)
     private UUID evnt;
-
-    @Column(name = "venue_id")
+    @JoinColumn(name = "venue", nullable = false)
     private UUID venue;
-
-    @Column(name = "user_owner_uuid")
+    @JoinColumn(name = "userOwnerUUID", nullable = false)
     private UUID userOwnerUUID;
 
     @Column(name = "total_price")
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 
-    private String status;
+    @Column(name = "status")
+    private TicketStatus status;
+    
+    @Column(name = "checked_in_at")
+    private Instant checkedInAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+        if (this.status == null)
+            this.status = TicketStatus.ISSUED;
+    }
+    
 }
