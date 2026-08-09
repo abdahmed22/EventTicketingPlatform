@@ -15,7 +15,6 @@ import EventTicketing.repository.SeatCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import EventTicketing.exception.SeatUnavailableException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -127,8 +126,11 @@ public class BookingService {
       UUID bookingId,
       User user) {
 
+    // Lock the booking row for the duration of this transaction so a
+    // concurrent cancel/expire on the same booking blocks until this
+    // transaction commits, instead of racing on a stale in-memory copy.
     Booking booking = bookingRepository
-        .findById(bookingId)
+        .findByIdWithLock(bookingId)
         .orElseThrow(() -> new ResourceNotFoundException(
             "Booking not found"));
 
@@ -149,7 +151,9 @@ public class BookingService {
     if (Instant.now().isAfter(
         booking.getExpiresAt())) {
 
-      expireBooking(booking);
+      // booking is already locked in this transaction, so expire it
+      // directly instead of re-acquiring the lock.
+      expireLockedBooking(booking);
 
       throw new IllegalStateException(
           "Booking reservation expired");
@@ -173,8 +177,10 @@ public class BookingService {
       UUID bookingId,
       User user) {
 
+    // Lock the booking row before inspecting/changing its status so this
+    // cannot race with a concurrent confirm or scheduler expiration.
     Booking booking = bookingRepository
-        .findById(bookingId)
+        .findByIdWithLock(bookingId)
         .orElseThrow(() -> new ResourceNotFoundException(
             "Booking not found"));
 
@@ -220,9 +226,32 @@ public class BookingService {
         savedBooking);
   }
 
+  /**
+   * Entry point used by the scheduler (and any other caller) to expire a
+   * PENDING booking by id. Re-fetches and locks the booking row inside its
+   * own transaction so this cannot race with a concurrent confirm/cancel on
+   * the same booking - whichever operation acquires the row lock first wins,
+   * and the other observes the up-to-date status once it acquires the lock.
+   */
   @Transactional
-  public void expireBooking(Booking booking) {
+  public void expireBooking(UUID bookingId) {
 
+    bookingRepository
+        .findByIdWithLock(bookingId)
+        .ifPresent(this::expireLockedBooking);
+  }
+
+  /**
+   * Expires a booking that the caller has ALREADY locked (via
+   * findByIdWithLock) within the current transaction. Never call this with
+   * an entity that was not fetched under a pessimistic write lock in the
+   * current transaction.
+   */
+  private void expireLockedBooking(Booking booking) {
+
+    // Idempotent / safe against races: if the booking was already
+    // confirmed, cancelled, or expired by the time this transaction
+    // acquired the lock, do nothing so seats are never released twice.
     if (booking.getStatus() != BookingStatus.PENDING) {
       return;
     }
@@ -282,11 +311,39 @@ public class BookingService {
                 BookingStatus.PENDING,
                 BookingStatus.CONFIRMED));
 
-    for (Booking booking : activeBookings) {
+    for (Booking summary : activeBookings) {
+
+      // Re-fetch with a lock: a user could be concurrently
+      // confirming/cancelling/expiring the same booking while an
+      // organizer cancels the whole event.
+      Booking booking = bookingRepository
+          .findByIdWithLock(summary.getId())
+          .orElse(null);
+
+      if (booking == null
+          || booking.getStatus() == BookingStatus.CANCELLED
+          || booking.getStatus() == BookingStatus.EXPIRED) {
+
+        // Already resolved by another concurrent operation - skip so
+        // seats are never released twice.
+        continue;
+      }
+
+      SeatCategory seatCategory =
+          seatCategoryRepository
+              .findByIdWithLock(
+                  booking.getSeatCategory().getId())
+              .orElseThrow(() -> new ResourceNotFoundException(
+                  "Seat category not found"));
+
+      updateAvailableSeats(
+          seatCategory,
+          booking.getQuantity());
 
       if (booking.getStatus() == BookingStatus.PENDING) {
 
-        expireBooking(booking);
+        booking.setStatus(
+            BookingStatus.EXPIRED);
 
       } else {
 
@@ -295,10 +352,9 @@ public class BookingService {
 
         booking.setCancelledAt(
             Instant.now());
-
-        bookingRepository.save(booking);
       }
+
+      bookingRepository.save(booking);
     }
   }
 }
-

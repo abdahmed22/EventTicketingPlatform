@@ -66,9 +66,17 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage());
     }
 
-    @ExceptionHandler({IllegalStateException.class, SeatUnavailableException.class, InvalidStateTransitionException.class})
+    @ExceptionHandler({IllegalStateException.class, InvalidStateTransitionException.class})
     public ResponseEntity<ErrorResponse> handleBadRequestState(RuntimeException ex) {
         return build(HttpStatus.BAD_REQUEST, "INVALID_STATE", ex.getMessage());
+    }
+
+    // 409 CONFLICT, not 400, per the booking SRS - the frontend booking flow
+    // already branches on status === 409 to show a "seats no longer
+    // available" message and refresh availability.
+    @ExceptionHandler(SeatUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleSeatUnavailable(SeatUnavailableException ex) {
+        return build(HttpStatus.CONFLICT, "SEAT_UNAVAILABLE", ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

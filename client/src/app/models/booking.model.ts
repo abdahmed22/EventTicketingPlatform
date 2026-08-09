@@ -21,4 +21,6 @@ export interface BookingResponse {
   status: BookingStatus;
   createdAt: string;
   expiresAt: string;
+  confirmedAt: string | null;
+  cancelledAt: string | null;
 }

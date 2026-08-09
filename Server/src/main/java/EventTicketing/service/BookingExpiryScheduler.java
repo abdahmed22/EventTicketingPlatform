@@ -28,7 +28,12 @@ public class BookingExpiryScheduler {
 
         for (Booking booking : expiredBookings) {
 
-            bookingService.expireBooking(booking);
+            // Pass only the id: the entities above were read outside a
+            // transaction and are detached, so expireBooking() re-fetches
+            // and locks the row itself inside its own transaction. This
+            // guards against acting on a stale status if the booking was
+            // confirmed/cancelled between this query and now.
+            bookingService.expireBooking(booking.getId());
         }
     }
 }

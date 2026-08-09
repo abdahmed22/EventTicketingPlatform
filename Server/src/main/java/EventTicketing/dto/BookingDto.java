@@ -35,7 +35,9 @@ public abstract class BookingDto {
             BigDecimal totalPrice,
             BookingStatus status,
             Instant createdAt,
-            Instant expiresAt
+            Instant expiresAt,
+            Instant confirmedAt,
+            Instant cancelledAt
     ) {
 
         public static Response from(Booking booking) {
@@ -49,7 +51,9 @@ public abstract class BookingDto {
                     booking.getTotalPrice(),
                     booking.getStatus(),
                     booking.getCreatedAt(),
-                    booking.getExpiresAt()
+                    booking.getExpiresAt(),
+                    booking.getConfirmedAt(),
+                    booking.getCancelledAt()
             );
         }
     }

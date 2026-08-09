@@ -270,7 +270,8 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
 
     if (
       !booking ||
-      booking.status !== 'PENDING'
+      (booking.status !== 'PENDING' &&
+        booking.status !== 'CONFIRMED')
     ) {
       return;
     }
@@ -328,4 +329,3 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
       });
   }
 }
-

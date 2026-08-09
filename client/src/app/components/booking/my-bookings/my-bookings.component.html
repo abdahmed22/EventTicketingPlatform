@@ -141,6 +141,36 @@
             }
 
 
+            @if (booking.status === 'CONFIRMED' && booking.confirmedAt) {
+
+              <div class="detail-item">
+
+                <strong>Confirmed</strong>
+
+                <span>
+                  {{ booking.confirmedAt | date:'medium' }}
+                </span>
+
+              </div>
+
+            }
+
+
+            @if (booking.status === 'CANCELLED' && booking.cancelledAt) {
+
+              <div class="detail-item">
+
+                <strong>Cancelled</strong>
+
+                <span>
+                  {{ booking.cancelledAt | date:'medium' }}
+                </span>
+
+              </div>
+
+            }
+
+
             @if (booking.status === 'EXPIRED') {
 
               <div class="expired-message">
@@ -200,6 +230,34 @@
 
               </button>
 
+
+            </div>
+
+          }
+
+
+          @if (booking.status === 'CONFIRMED') {
+
+            <div class="booking-actions">
+
+              <button
+                type="button"
+                class="cancel-btn"
+                [disabled]="actioningId() === booking.id"
+                (click)="cancelBooking(booking.id)"
+              >
+
+                @if (actioningId() === booking.id) {
+
+                  Processing...
+
+                } @else {
+
+                  Cancel
+
+                }
+
+              </button>
 
             </div>
 
