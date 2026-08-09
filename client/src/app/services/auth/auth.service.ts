@@ -36,7 +36,10 @@ export class AuthService {
   readonly token = this.tokenSignal.asReadonly();
   readonly user = this.userSignal.asReadonly();
   readonly isLoggedIn = computed(() => this.token() !== null);
-  readonly role = computed<UserRole | null>(() => this.user()?.role ?? null);
+  readonly role = computed<UserRole | null>(() => {
+    const r = this.user()?.role;
+    return r ? (r.toUpperCase() as UserRole) : null;
+  });
   readonly isCustomer = computed(() => this.role() === 'CUSTOMER');
   readonly isOrganizer = computed(() => this.role() === 'ORGANIZER');
   readonly isAdmin = computed(() => this.role() === 'ADMIN');

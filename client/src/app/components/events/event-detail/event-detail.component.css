@@ -2,7 +2,9 @@
   --primary: #2e5aac;
   --primary-dark: #234889;
   --border: #d8dce3;
+  --text: #111827;
   --text-muted: #6b7280;
+  --error: #c0392b;
   --success: #2e8b57;
   --danger: #c0392b;
   display: block;
@@ -145,7 +147,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-
 }
 
 .description-box {
@@ -279,6 +280,48 @@
   background: var(--danger);
 }
 
+/* Booking Widget */
+.booking-widget {
+  background: #fdfdfd;
+}
+
+.booking-widget h3 {
+  margin: 0 0 16px;
+  font-size: 18px;
+  color: #111827;
+}
+
+.seat-availability-badge {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.seat-availability-badge.sold-out {
+  color: var(--danger);
+}
+
+.total-price-box {
+  display: flex;
+  justify-content: space-between;
+  margin: 16px 0;
+  font-size: 16px;
+}
+
+.total-price-box strong {
+  color: var(--primary);
+  font-size: 18px;
+}
+
+.btn-block {
+  width: 100%;
+  display: block;
+}
+
 /* Venue Card */
 .venue-header {
   display: flex;
@@ -345,8 +388,13 @@
   color: #ffffff;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--primary-dark);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-success {
@@ -418,7 +466,8 @@
   font-weight: 600;
 }
 
-.form-field input {
+.form-field input,
+.form-field select {
   width: 100%;
   padding: 9px 12px;
   border: 1px solid var(--border);

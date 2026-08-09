@@ -1,8 +1,9 @@
 package EventTicketing.service;
 
 import EventTicketing.dto.BookingDto;
-import EventTicketing.exception.ResourceNotFoundException;
 import EventTicketing.exception.ForbiddenActionException;
+import EventTicketing.exception.ResourceNotFoundException;
+import EventTicketing.exception.SeatUnavailableException;
 import EventTicketing.model.Booking;
 import EventTicketing.model.Event;
 import EventTicketing.model.SeatCategory;
@@ -21,250 +22,339 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
-
 @Service
 @RequiredArgsConstructor
 public class BookingService {
 
-    private final BookingRepository bookingRepository;
-    private final EventRepository eventRepository;
-    private final SeatCategoryRepository seatCategoryRepository;
+  private final BookingRepository bookingRepository;
+  private final EventRepository eventRepository;
+  private final SeatCategoryRepository seatCategoryRepository;
 
+  @Transactional
+  public void updateAvailableSeats(
+      SeatCategory seatCategory,
+      int amount) {
 
-    // Single method responsible for all availableSeats changes
-    @Transactional
-    public void updateAvailableSeats(SeatCategory seatCategory, int amount) {
+    int newAvailableSeats =
+        seatCategory.getAvailableSeats() + amount;
 
-        seatCategory.setAvailableSeats(
-                seatCategory.getAvailableSeats() + amount
-        );
-
-        seatCategoryRepository.save(seatCategory);
+    if (newAvailableSeats < 0) {
+      throw new IllegalStateException(
+          "Available seats cannot be negative");
     }
 
-
-    @Transactional
-    public BookingDto.Response reserve(
-            User user,
-            BookingDto.CreateRequest request
-    ) {
-
-        Event event = eventRepository.findById(request.eventId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Event not found"));
-
-
-        SeatCategory seatCategory =
-                seatCategoryRepository.findByIdWithLock(request.seatCategoryId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Seat category not found"));
-
-
-        if (seatCategory.getAvailableSeats() < request.quantity()) {
-
-            throw new IllegalStateException(
-                    "Not enough seats available");
-        }
-
-
-        BigDecimal totalPrice =
-                seatCategory.getPrice()
-                        .multiply(
-                                BigDecimal.valueOf(request.quantity())
-                        );
-
-
-        // decrease seats
-        updateAvailableSeats(
-                seatCategory,
-                -request.quantity()
-        );
-
-
-        Booking booking = Booking.builder()
-                .user(user)
-                .event(event)
-                .seatCategory(seatCategory)
-                .quantity(request.quantity())
-                .totalPrice(totalPrice)
-                .status(BookingStatus.PENDING)
-                .createdAt(Instant.now())
-                .expiresAt(
-                        Instant.now()
-                                .plus(5, ChronoUnit.MINUTES)
-                )
-                .build();
-
-
-        Booking savedBooking =
-                bookingRepository.save(booking);
-
-
-        return BookingDto.Response.from(savedBooking);
+    if (newAvailableSeats > seatCategory.getTotalSeats()) {
+      throw new IllegalStateException(
+          "Available seats cannot exceed total seats");
     }
 
+    seatCategory.setAvailableSeats(newAvailableSeats);
 
+    seatCategoryRepository.save(seatCategory);
+  }
 
-    @Transactional
-    public BookingDto.Response confirm(
-            UUID bookingId,
-            User user
-    ) {
+  @Transactional
+  public BookingDto.Response reserve(
+      User user,
+      BookingDto.CreateRequest request) {
 
-        Booking booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Booking not found"));
+    Event event = eventRepository
+        .findById(request.eventId())
+        .orElseThrow(() -> new ResourceNotFoundException(
+            "Event not found"));
 
+    // Only PUBLISHED events can be booked
+    if (event.getStatus() != Event.Status.PUBLISHED) {
+      throw new IllegalStateException(
+          "Event is not open for booking");
+    }
 
-        if (!booking.getUser().getId()
-                .equals(user.getId())) {
+    SeatCategory seatCategory = seatCategoryRepository
+        .findByIdWithLock(request.seatCategoryId())
+        .orElseThrow(() -> new ResourceNotFoundException(
+            "Seat category not found"));
 
-            throw new ForbiddenActionException(
-                    "You cannot confirm this booking");
-        }
+    // Make sure the seat category belongs to this event
+    if (!seatCategory.getEvent().getId()
+        .equals(event.getId())) {
 
+      throw new IllegalStateException(
+          "Seat category does not belong to this event");
+    }
 
-        if (booking.getStatus()
-                != BookingStatus.PENDING) {
+    // Seat availability conflict -> 409 CONFLICT
+    if (request.quantity() > seatCategory.getAvailableSeats()) {
 
-            throw new IllegalStateException(
-                    "Booking cannot be confirmed");
-        }
+      throw new SeatUnavailableException(
+          "Not enough seats available");
+    }
 
+    BigDecimal totalPrice = seatCategory.getPrice()
+        .multiply(
+            BigDecimal.valueOf(
+                request.quantity()));
 
-        if (Instant.now().isAfter(booking.getExpiresAt())) {
-            throw new IllegalStateException("Booking reservation expired");
-        }
+    // Reserve seats
+    updateAvailableSeats(
+        seatCategory,
+        -request.quantity());
 
+    Instant now = Instant.now();
+
+    Booking booking = Booking.builder()
+        .user(user)
+        .event(event)
+        .seatCategory(seatCategory)
+        .quantity(request.quantity())
+        .totalPrice(totalPrice)
+        .status(BookingStatus.PENDING)
+        .createdAt(now)
+        .expiresAt(
+            now.plus(
+                5,
+                ChronoUnit.MINUTES))
+        .build();
+
+    Booking savedBooking =
+        bookingRepository.save(booking);
+
+    return BookingDto.Response.from(savedBooking);
+  }
+
+  @Transactional
+  public BookingDto.Response confirm(
+      UUID bookingId,
+      User user) {
+
+    // Lock the booking row for the duration of this transaction so a
+    // concurrent cancel/expire on the same booking blocks until this
+    // transaction commits, instead of racing on a stale in-memory copy.
+    Booking booking = bookingRepository
+        .findByIdWithLock(bookingId)
+        .orElseThrow(() -> new ResourceNotFoundException(
+            "Booking not found"));
+
+    if (!booking.getUser().getId()
+        .equals(user.getId())) {
+
+      throw new ForbiddenActionException(
+          "You cannot confirm this booking");
+    }
+
+    if (booking.getStatus() != BookingStatus.PENDING) {
+
+      throw new IllegalStateException(
+          "Booking cannot be confirmed");
+    }
+
+    // Check expiration
+    if (Instant.now().isAfter(
+        booking.getExpiresAt())) {
+
+      // booking is already locked in this transaction, so expire it
+      // directly instead of re-acquiring the lock.
+      expireLockedBooking(booking);
+
+      throw new IllegalStateException(
+          "Booking reservation expired");
+    }
+
+    booking.setStatus(
+        BookingStatus.CONFIRMED);
+
+    booking.setConfirmedAt(
+        Instant.now());
+
+    Booking savedBooking =
+        bookingRepository.save(booking);
+
+    return BookingDto.Response.from(
+        savedBooking);
+  }
+
+  @Transactional
+  public BookingDto.Response cancel(
+      UUID bookingId,
+      User user) {
+
+    // Lock the booking row before inspecting/changing its status so this
+    // cannot race with a concurrent confirm or scheduler expiration.
+    Booking booking = bookingRepository
+        .findByIdWithLock(bookingId)
+        .orElseThrow(() -> new ResourceNotFoundException(
+            "Booking not found"));
+
+    if (!booking.getUser().getId()
+        .equals(user.getId())) {
+
+      throw new ForbiddenActionException(
+          "You cannot cancel this booking");
+    }
+
+    if (booking.getStatus() == BookingStatus.CANCELLED
+        || booking.getStatus() == BookingStatus.EXPIRED) {
+
+      throw new IllegalStateException(
+          "Booking is already inactive");
+    }
+
+    // Lock the seat category
+    SeatCategory seatCategory =
+        seatCategoryRepository
+            .findByIdWithLock(
+                booking
+                    .getSeatCategory()
+                    .getId())
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Seat category not found"));
+
+    // Return seats
+    updateAvailableSeats(
+        seatCategory,
+        booking.getQuantity());
+
+    booking.setStatus(
+        BookingStatus.CANCELLED);
+
+    booking.setCancelledAt(
+        Instant.now());
+
+    Booking savedBooking =
+        bookingRepository.save(booking);
+
+    return BookingDto.Response.from(
+        savedBooking);
+  }
+
+  /**
+   * Entry point used by the scheduler (and any other caller) to expire a
+   * PENDING booking by id. Re-fetches and locks the booking row inside its
+   * own transaction so this cannot race with a concurrent confirm/cancel on
+   * the same booking - whichever operation acquires the row lock first wins,
+   * and the other observes the up-to-date status once it acquires the lock.
+   */
+  @Transactional
+  public void expireBooking(UUID bookingId) {
+
+    bookingRepository
+        .findByIdWithLock(bookingId)
+        .ifPresent(this::expireLockedBooking);
+  }
+
+  /**
+   * Expires a booking that the caller has ALREADY locked (via
+   * findByIdWithLock) within the current transaction. Never call this with
+   * an entity that was not fetched under a pessimistic write lock in the
+   * current transaction.
+   */
+  private void expireLockedBooking(Booking booking) {
+
+    // Idempotent / safe against races: if the booking was already
+    // confirmed, cancelled, or expired by the time this transaction
+    // acquired the lock, do nothing so seats are never released twice.
+    if (booking.getStatus() != BookingStatus.PENDING) {
+      return;
+    }
+
+    SeatCategory seatCategory =
+        seatCategoryRepository
+            .findByIdWithLock(
+                booking.getSeatCategory().getId())
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Seat category not found"));
+
+    updateAvailableSeats(
+        seatCategory,
+        booking.getQuantity());
+
+    booking.setStatus(
+        BookingStatus.EXPIRED);
+
+    bookingRepository.save(booking);
+  }
+
+  @Transactional
+  public void releaseSeats(
+      UUID seatCategoryId,
+      int quantity) {
+
+    SeatCategory seatCategory =
+        seatCategoryRepository
+            .findByIdWithLock(seatCategoryId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Seat category not found"));
+
+    updateAvailableSeats(
+        seatCategory,
+        quantity);
+  }
+
+  @Transactional(readOnly = true)
+  public List<BookingDto.Response> myBookings(
+      User user) {
+
+    return bookingRepository
+        .findByUserId(user.getId())
+        .stream()
+        .map(BookingDto.Response::from)
+        .toList();
+  }
+
+  @Transactional
+  public void cancelBookingsForEvent(
+      UUID eventId) {
+
+    List<Booking> activeBookings =
+        bookingRepository.findByEventIdAndStatusIn(
+            eventId,
+            List.of(
+                BookingStatus.PENDING,
+                BookingStatus.CONFIRMED));
+
+    for (Booking summary : activeBookings) {
+
+      // Re-fetch with a lock: a user could be concurrently
+      // confirming/cancelling/expiring the same booking while an
+      // organizer cancels the whole event.
+      Booking booking = bookingRepository
+          .findByIdWithLock(summary.getId())
+          .orElse(null);
+
+      if (booking == null
+          || booking.getStatus() == BookingStatus.CANCELLED
+          || booking.getStatus() == BookingStatus.EXPIRED) {
+
+        // Already resolved by another concurrent operation - skip so
+        // seats are never released twice.
+        continue;
+      }
+
+      SeatCategory seatCategory =
+          seatCategoryRepository
+              .findByIdWithLock(
+                  booking.getSeatCategory().getId())
+              .orElseThrow(() -> new ResourceNotFoundException(
+                  "Seat category not found"));
+
+      updateAvailableSeats(
+          seatCategory,
+          booking.getQuantity());
+
+      if (booking.getStatus() == BookingStatus.PENDING) {
 
         booking.setStatus(
-                BookingStatus.CONFIRMED
-        );
+            BookingStatus.EXPIRED);
 
-        booking.setConfirmedAt(
-                Instant.now()
-        );
-
-
-        return BookingDto.Response.from(
-                bookingRepository.save(booking)
-        );
-    }
-
-
-
-    @Transactional
-    public BookingDto.Response cancel(
-            UUID bookingId,
-            User user
-    ) {
-
-
-        Booking booking =
-                bookingRepository.findById(bookingId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Booking not found"));
-
-
-
-        if (!booking.getUser().getId()
-                .equals(user.getId())) {
-
-
-            throw new ForbiddenActionException(
-                    "You cannot cancel this booking");
-        }
-
-
-
-        if (booking.getStatus()
-                == BookingStatus.CANCELLED
-                || booking.getStatus()
-                == BookingStatus.EXPIRED) {
-
-
-            throw new IllegalStateException(
-                    "Booking is already inactive");
-        }
-
-
-
-        // Lock SeatCategory before returning seats to avoid race conditions
-        SeatCategory seatCategory =
-                seatCategoryRepository.findByIdWithLock(booking.getSeatCategory().getId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Seat category not found"));
-
-        // return seats
-        updateAvailableSeats(
-                seatCategory,
-                booking.getQuantity()
-        );
-
-
+      } else {
 
         booking.setStatus(
-                BookingStatus.CANCELLED
-        );
-
+            BookingStatus.CANCELLED);
 
         booking.setCancelledAt(
-                Instant.now()
-        );
+            Instant.now());
+      }
 
-
-
-        return BookingDto.Response.from(
-                bookingRepository.save(booking)
-        );
+      bookingRepository.save(booking);
     }
-
-
-
-
-    // Used by Scheduler
-    @Transactional
-    public void releaseSeats(
-            UUID seatCategoryId,
-            int quantity
-    ) {
-
-
-        SeatCategory seatCategory =
-                seatCategoryRepository
-                        .findByIdWithLock(seatCategoryId)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Seat category not found"));
-
-
-
-        updateAvailableSeats(
-                seatCategory,
-                quantity
-        );
-    }
-
-
-
-
-    public List<BookingDto.Response> myBookings(
-            User user
-    ) {
-
-
-        return bookingRepository
-                .findByUserId(user.getId())
-
-                .stream()
-
-                .map(BookingDto.Response::from)
-
-                .toList();
-    }
-}
+  }
+}

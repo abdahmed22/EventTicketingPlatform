@@ -10,7 +10,13 @@
         Browse Events
       </a>
 
-      @if (authService.isOrganizer() || authService.isAdmin()) {
+      @if (authService.isCustomer()) {
+        <a routerLink="/bookings" routerLinkActive="active" class="nav-item">
+          My Bookings
+        </a>
+      }
+
+      @if (authService.isOrganizer()) {
         <a routerLink="/organizer/events" routerLinkActive="active" class="nav-item">
           My Events
         </a>

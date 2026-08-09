@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TicketAttendeeRepository  extends JpaRepository<TicketAttendee, UUID> {
-    List<TicketAttendee> getByTicketUUID(UUID ticketId);
+    List<TicketAttendee> getByTicketId(UUID ticketId);
 }

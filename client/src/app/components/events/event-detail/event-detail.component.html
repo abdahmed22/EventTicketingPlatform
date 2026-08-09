@@ -115,8 +115,78 @@
         </div>
       </div>
 
-      <!-- Sidebar Venue Column -->
+      <!-- Sidebar Column (Venue & Booking Widget) -->
       <div class="sidebar-column">
+        <!-- Customer Booking Widget -->
+        @if (event()!.status === 'PUBLISHED' && event()!.seatCategories.length > 0) {
+          <div class="venue-card booking-widget">
+            <h3>🎟️ Reserve Seats</h3>
+
+            <div class="form-field">
+              <label for="seatCategory">Seat Category</label>
+              <select
+                id="seatCategory"
+                [value]="selectedSeatCategoryId()"
+                (change)="onSeatCategoryChange($any($event.target).value)"
+              >
+                @for (category of event()!.seatCategories; track category.id) {
+                  <option [value]="category.id" [disabled]="category.availableSeats <= 0">
+                    {{ category.name }} - {{ category.price | currency }}
+                    {{ category.availableSeats > 0 ? '(' + category.availableSeats + ' available)' : '- Sold Out' }}
+                  </option>
+                }
+              </select>
+              @if (selectedCategory(); as category) {
+                <div class="seat-availability-badge" [class.sold-out]="category.availableSeats <= 0">
+                  @if (category.availableSeats > 1) {
+                    🟢 {{ category.availableSeats }} seats available
+                  } @else if (category.availableSeats === 1) {
+                    🟢 1 seat available
+                  } @else {
+                    🔴 Sold Out
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="form-field">
+              <label for="quantity">Quantity</label>
+              <input
+                id="quantity"
+                type="number"
+                min="1"
+                [max]="selectedCategory()?.availableSeats ?? 1"
+                [disabled]="!selectedCategory() || selectedCategory()!.availableSeats <= 0"
+                [value]="quantity()"
+                (input)="onQuantityChange(+$any($event.target).value)"
+              />
+            </div>
+
+            @if (selectedCategory(); as category) {
+              <div class="total-price-box">
+                <span>Total Price:</span>
+                <strong>{{ category.price * quantity() | currency }}</strong>
+              </div>
+            }
+
+            <button
+              type="button"
+              class="btn btn-primary btn-block"
+              [disabled]="
+                reserving() ||
+                !selectedCategory() ||
+                selectedCategory()!.availableSeats <= 0 ||
+                quantity() < 1 ||
+                !Number.isInteger(quantity()) ||
+                quantity() > selectedCategory()!.availableSeats
+              "
+              (click)="reserve()"
+            >
+              {{ reserving() ? 'Reserving...' : 'Reserve Seats' }}
+            </button>
+          </div>
+        }
+
         <div class="venue-card">
           <div class="venue-header">
             <span class="venue-icon">🏛️</span>

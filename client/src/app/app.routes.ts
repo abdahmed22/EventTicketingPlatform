@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { guestGuard } from './guards/guest.guard';
-import { adminGuard, organizerGuard } from './guards/auth.guard';
+import { adminGuard, customerGuard, organizerGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -31,6 +31,14 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./components/auth/organizer-application/organizer-application.component').then(
         (m) => m.OrganizerApplicationComponent
+      )
+  },
+  {
+    path: 'bookings',
+    canActivate: [customerGuard],
+    loadComponent: () =>
+      import('./components/booking/my-bookings/my-bookings.component').then(
+        (m) => m.MyBookingsComponent
       )
   },
   {
