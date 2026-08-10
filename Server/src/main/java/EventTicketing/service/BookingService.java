@@ -9,6 +9,7 @@ import EventTicketing.model.Event;
 import EventTicketing.model.SeatCategory;
 import EventTicketing.model.User;
 import EventTicketing.model.enums.BookingStatus;
+import EventTicketing.model.enums.UserRole;
 import EventTicketing.repository.BookingRepository;
 import EventTicketing.repository.EventRepository;
 import EventTicketing.repository.SeatCategoryRepository;
@@ -356,5 +357,30 @@ public class BookingService {
 
       bookingRepository.save(booking);
     }
+  }
+
+  @Transactional(readOnly = true)
+  public List<BookingDto.Response> getEventBookings(UUID eventId, User organizer) {
+    Event event = eventRepository.findById(eventId)
+        .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
+
+    if (organizer.getRole() != UserRole.ADMIN && !event.getOrganizer().getId().equals(organizer.getId())) {
+      throw new ForbiddenActionException("You do not have permission to view bookings for this event");
+    }
+
+    return bookingRepository.findByEventId(eventId).stream()
+        .map(BookingDto.Response::from)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<BookingDto.Response> getAllBookingsForAdmin(User admin) {
+    if (admin.getRole() != UserRole.ADMIN) {
+      throw new ForbiddenActionException("Only admin users may perform this action");
+    }
+
+    return bookingRepository.findAll().stream()
+        .map(BookingDto.Response::from)
+        .toList();
   }
 }

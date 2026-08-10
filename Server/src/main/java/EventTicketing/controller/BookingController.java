@@ -14,14 +14,14 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/bookings")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class BookingController {
 
     private final BookingService bookingService;
 
 
-    @PostMapping
+    @PostMapping("/bookings")
     public ResponseEntity<BookingDto.Response> reserve(
             @AuthenticationPrincipal User user,
             @Valid @RequestBody BookingDto.CreateRequest request
@@ -33,7 +33,7 @@ public class BookingController {
     }
 
 
-    @PostMapping("/{id}/confirm")
+    @PostMapping("/bookings/{id}/confirm")
     public ResponseEntity<BookingDto.Response> confirm(
             @PathVariable UUID id,
             @AuthenticationPrincipal User user
@@ -45,7 +45,7 @@ public class BookingController {
     }
 
 
-    @PostMapping("/{id}/cancel")
+    @PostMapping("/bookings/{id}/cancel")
     public ResponseEntity<BookingDto.Response> cancel(
             @PathVariable UUID id,
             @AuthenticationPrincipal User user
@@ -57,13 +57,32 @@ public class BookingController {
     }
 
 
-    @GetMapping("/my")
+    @GetMapping("/bookings/my")
     public ResponseEntity<List<BookingDto.Response>> myBookings(
             @AuthenticationPrincipal User user
     ) {
 
         return ResponseEntity.ok(
                 bookingService.myBookings(user)
+        );
+    }
+
+    @GetMapping("/organizer/events/{eventId}/bookings")
+    public ResponseEntity<List<BookingDto.Response>> getEventBookings(
+            @PathVariable UUID eventId,
+            @AuthenticationPrincipal User organizer
+    ) {
+        return ResponseEntity.ok(
+                bookingService.getEventBookings(eventId, organizer)
+        );
+    }
+
+    @GetMapping("/admin/bookings")
+    public ResponseEntity<List<BookingDto.Response>> getAllBookingsForAdmin(
+            @AuthenticationPrincipal User admin
+    ) {
+        return ResponseEntity.ok(
+                bookingService.getAllBookingsForAdmin(admin)
         );
     }
 }

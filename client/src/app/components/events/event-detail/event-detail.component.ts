@@ -11,6 +11,7 @@ import { AuthService } from '../../../services/auth/auth.service';
 
 import { EventCategory, EventResponse } from '../../../models/event.model';
 import { SeatCategoryCreateRequest, SeatCategorySummary } from '../../../models/seat-category.model';
+import { BookingResponse } from '../../../models/booking.model';
 import { ApiError } from '../../../models/api-error.model';
 import { getEventCategoryImage } from '../../../utils/event-image.util';
 
@@ -42,6 +43,12 @@ export class EventDetailComponent {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly actionSuccess = signal<string | null>(null);
+
+  // Organizer/Admin: bookings panel
+  readonly bookings = signal<BookingResponse[]>([]);
+  readonly bookingsLoading = signal(false);
+  readonly bookingsError = signal<string | null>(null);
+  readonly showBookings = signal(false);
 
   // Booking Reservation State
   readonly selectedSeatCategoryId = signal<string>('');
@@ -277,6 +284,34 @@ export class EventDetailComponent {
   getAvailabilityPercent(sc: SeatCategorySummary): number {
     if (!sc.totalSeats) return 0;
     return Math.round((sc.availableSeats / sc.totalSeats) * 100);
+  }
+
+  toggleBookingsPanel(): void {
+    const evt = this.event();
+    if (!evt) return;
+    if (this.showBookings()) {
+      this.showBookings.set(false);
+      return;
+    }
+    this.showBookings.set(true);
+    if (this.bookings().length === 0) {
+      this.loadEventBookings(evt.id);
+    }
+  }
+
+  loadEventBookings(eventId: string): void {
+    this.bookingsLoading.set(true);
+    this.bookingsError.set(null);
+    this.bookingService.getEventBookings(eventId).subscribe({
+      next: (res) => {
+        this.bookings.set(res);
+        this.bookingsLoading.set(false);
+      },
+      error: (err: unknown) => {
+        this.bookingsError.set(err instanceof ApiError ? err.message : 'Failed to load bookings.');
+        this.bookingsLoading.set(false);
+      }
+    });
   }
 
   getCategoryImage(category: EventCategory): string {

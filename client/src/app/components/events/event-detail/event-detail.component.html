@@ -80,8 +80,56 @@
                   Cancel Event
                 </button>
               }
+              <button type="button" class="btn btn-outline" (click)="toggleBookingsPanel()">
+                {{ showBookings() ? '▲ Hide Bookings' : '▾ View Attendees / Bookings' }}
+              </button>
             </div>
           </div>
+
+          <!-- Bookings Panel (Organizer / Admin) -->
+          @if (showBookings()) {
+            <div class="bookings-panel">
+              <h3>Event Bookings</h3>
+              @if (bookingsLoading()) {
+                <div class="loading-state">Loading bookings...</div>
+              } @else if (bookingsError()) {
+                <div class="banner banner-error">{{ bookingsError() }}</div>
+              } @else if (bookings().length === 0) {
+                <div class="empty-state-sm">No bookings yet for this event.</div>
+              } @else {
+                <div class="bookings-table-wrapper">
+                  <table class="bookings-table">
+                    <thead>
+                      <tr>
+                        <th>Booking ID</th>
+                        <th>Seat Category</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (b of bookings(); track b.id) {
+                        <tr>
+                          <td class="booking-id-cell" title="{{ b.id }}">{{ b.id.substring(0, 8) }}…</td>
+                          <td>{{ b.seatCategoryName }}</td>
+                          <td>{{ b.quantity }}</td>
+                          <td>{{ b.totalPrice | currency }}</td>
+                          <td>
+                            <span class="status-pill status-{{ b.status.toLowerCase() }}">
+                              {{ b.status }}
+                            </span>
+                          </td>
+                          <td>{{ b.createdAt | date: 'mediumDate' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              }
+            </div>
+          }
         }
 
         <!-- Ticket Options Section -->
