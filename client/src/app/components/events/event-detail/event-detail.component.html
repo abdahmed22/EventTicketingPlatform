@@ -14,113 +14,119 @@
   @if (loading()) {
     <div class="loading-state">Loading event details...</div>
   } @else if (event()) {
+    <!-- Hero Banner -->
+    <div class="event-hero">
+      <div class="hero-overlay">
+        <span class="hero-category-badge">{{ event()!.category }}</span>
+        <h1 class="hero-title">{{ event()!.title }}</h1>
+        <div class="hero-meta">
+          <span class="hero-meta-item">📅 {{ event()!.eventDate | date: 'fullDate' }} · {{ event()!.eventTime }}</span>
+          <span class="hero-meta-item">📍 {{ event()!.venue.name }}, {{ event()!.venue.address }}</span>
+        </div>
+      </div>
+    </div>
+
     <div class="detail-grid">
       <!-- Main Event Details -->
       <div class="main-column">
-        <div class="detail-card">
-          <div class="detail-header">
-            <span class="category-pill">{{ event()!.category }}</span>
+        <!-- Status pills for organizer / admin -->
+        @if (authService.isOrganizer() || authService.isAdmin()) {
+          <div class="status-row">
             <span class="status-pill" [class]="'status-' + event()!.status.toLowerCase()">
               {{ event()!.status }}
             </span>
           </div>
+        }
 
-          <h1 class="event-title">{{ event()!.title }}</h1>
-
-          <div class="meta-pills">
-            <div class="meta-item">
-              <span class="icon">📅</span>
-              <span>{{ event()!.eventDate | date: 'fullDate' }} at {{ event()!.eventTime }}</span>
-            </div>
+        @if (event()!.description) {
+          <div class="description-box">
+            <h2>About the Event</h2>
+            <p>{{ event()!.description }}</p>
           </div>
+        }
 
-          @if (event()!.description) {
-            <div class="description-box">
-              <h3>About this event</h3>
-              <p>{{ event()!.description }}</p>
-            </div>
-          }
-
-          <!-- Organizer / Admin Actions Bar -->
-          @if (authService.isOrganizer() || authService.isAdmin()) {
-            <div class="management-bar">
-              <h3>Organizer & Admin Actions</h3>
-              <div class="action-buttons">
-                @if (event()!.status === 'DRAFT') {
-                  <button type="button" class="btn btn-success" (click)="publishEvent()">
-                    🚀 Publish Event
-                  </button>
-                }
-                @if (event()!.status !== 'CANCELLED') {
-                  <button type="button" class="btn btn-secondary" (click)="openSeatModal()">
-                    ➕ Add Seat Category
-                  </button>
-                  <button type="button" class="btn btn-danger" (click)="cancelEvent()">
-                    🚫 Cancel Event
-                  </button>
-                }
-              </div>
-            </div>
-          }
+        <!-- Venue Location Card -->
+        <div class="venue-location-card">
+          <h2>Venue Location</h2>
+          <h3 class="venue-name">{{ event()!.venue.name }}</h3>
+          <p class="venue-address">{{ event()!.venue.address }}</p>
+          <div class="venue-capacity">
+            <span>Total Venue Capacity</span>
+            <strong>{{ event()!.venue.capacity }} Seats</strong>
+          </div>
         </div>
 
-        <!-- Seat Categories Section -->
-        <div class="section-card">
-          <div class="section-title-row">
-            <h2>Seat Categories & Pricing</h2>
-            @if ((authService.isOrganizer() || authService.isAdmin()) && event()!.status !== 'CANCELLED') {
-              <button type="button" class="btn btn-sm btn-primary" (click)="openSeatModal()">
-                + Add Category
-              </button>
-            }
-          </div>
-
-          @if (event()!.seatCategories.length === 0) {
-            <div class="empty-seats">
-              <p>No seat categories have been created for this event yet.</p>
+        <!-- Organizer / Admin Actions Bar -->
+        @if (authService.isOrganizer() || authService.isAdmin()) {
+          <div class="management-bar">
+            <h3>Management Actions</h3>
+            <div class="action-buttons">
               @if (event()!.status === 'DRAFT') {
-                <span class="warn-text">⚠️ An event must have at least one seat category before it can be published.</span>
+                <button type="button" class="btn btn-success" (click)="publishEvent()">
+                  🚀 Publish Event
+                </button>
+              }
+              @if (event()!.status !== 'CANCELLED') {
+                <button type="button" class="btn btn-outline" (click)="openSeatModal()">
+                  + Add Seat Category
+                </button>
+                <button type="button" class="btn btn-danger" (click)="cancelEvent()">
+                  Cancel Event
+                </button>
               }
             </div>
-          } @else {
-            <div class="seat-list">
+          </div>
+        }
+
+        <!-- Ticket Options Section -->
+        @if (event()!.seatCategories.length > 0) {
+          <div class="ticket-options-section">
+            <h2>Ticket Options</h2>
+            <div class="ticket-options-grid">
               @for (sc of event()!.seatCategories; track sc.id) {
-                <div class="seat-card">
-                  <div class="seat-main">
-                    <div class="seat-name-row">
-                      <span class="seat-name">{{ sc.name }}</span>
-                      <span class="seat-price">{{ sc.price | currency }}</span>
-                    </div>
-
-                    <div class="seat-info">
-                      <span>Available: <strong>{{ sc.availableSeats }}</strong> / {{ sc.totalSeats }}</span>
-                      @if (sc.seatingCapacity > 1) {
-                        <span class="capacity-tag">Capacity: {{ sc.seatingCapacity }} persons / seat</span>
-                      }
-                    </div>
-
-                    <!-- Availability Progress Bar -->
-                    <div class="progress-bar-container">
-                      <div
-                        class="progress-bar-fill"
-                        [style.width.%]="getAvailabilityPercent(sc)"
-                        [class.low-stock]="getAvailabilityPercent(sc) <= 20"
-                      ></div>
-                    </div>
+                <div class="ticket-option-card" [class.low-stock]="sc.availableSeats <= 5 && sc.availableSeats > 0" [class.sold-out]="sc.availableSeats <= 0">
+                  <div class="ticket-option-header">
+                    <span class="ticket-option-name">{{ sc.name }}</span>
+                    <span class="ticket-option-price">{{ sc.price | currency }}</span>
+                  </div>
+                  @if (sc.seatingCapacity > 1) {
+                    <p class="ticket-option-desc">{{ sc.seatingCapacity }} persons per ticket</p>
+                  }
+                  <div class="ticket-option-availability">
+                    @if (sc.availableSeats > 0) {
+                      <span class="avail-tag">{{ sc.availableSeats }} available</span>
+                    } @else {
+                      <span class="avail-tag sold-out-tag">Sold Out</span>
+                    }
+                  </div>
+                  <!-- Availability Progress Bar -->
+                  <div class="progress-bar-container">
+                    <div
+                      class="progress-bar-fill"
+                      [style.width.%]="getAvailabilityPercent(sc)"
+                      [class.low-stock]="getAvailabilityPercent(sc) <= 20"
+                    ></div>
                   </div>
                 </div>
               }
             </div>
-          }
-        </div>
+          </div>
+        } @else {
+          <div class="empty-seats">
+            <p>No seat categories have been created for this event yet.</p>
+            @if (event()!.status === 'DRAFT') {
+              <span class="warn-text">⚠️ An event must have at least one seat category before it can be published.</span>
+            }
+          </div>
+        }
       </div>
 
-      <!-- Sidebar Column (Venue & Booking Widget) -->
+      <!-- Sidebar Column (Booking Widget) -->
       <div class="sidebar-column">
         <!-- Customer Booking Widget -->
         @if (event()!.status === 'PUBLISHED' && event()!.seatCategories.length > 0) {
-          <div class="venue-card booking-widget">
-            <h3>🎟️ Reserve Seats</h3>
+          <div class="booking-widget">
+            <h3>Select Tickets</h3>
 
             <div class="form-field">
               <label for="seatCategory">Seat Category</label>
@@ -140,26 +146,49 @@
 
             <div class="form-field">
               <label for="quantity">Quantity</label>
-              <input
-                id="quantity"
-                type="number"
-                min="1"
-                [max]="selectedCategory()?.availableSeats ?? 1"
-                [value]="quantity()"
-                (input)="onQuantityChange(+$any($event.target).value)"
-              />
+              <div class="quantity-control">
+                <button
+                  type="button"
+                  class="qty-btn"
+                  [disabled]="!selectedCategory() || quantity() <= 1"
+                  (click)="onQuantityChange(quantity() - 1)"
+                >
+                  −
+                </button>
+                <span class="qty-value">{{ quantity() }}</span>
+                <button
+                  type="button"
+                  class="qty-btn"
+                  [disabled]="!selectedCategory() || selectedCategory()!.availableSeats <= 0 || quantity() >= selectedCategory()!.availableSeats"
+                  (click)="onQuantityChange(quantity() + 1)"
+                >
+                  +
+                </button>
+              </div>
             </div>
 
             @if (selectedCategory(); as category) {
+              <div class="seat-availability-badge" [class.sold-out]="category.availableSeats <= 0">
+                @if (category.availableSeats > 5) {
+                  ℹ️ Plenty of seats available in this section.
+                } @else if (category.availableSeats > 0) {
+                  ⚠️ Only {{ category.availableSeats }} seats left!
+                } @else {
+                  ❌ Sold Out
+                }
+              </div>
+            }
+
+            @if (selectedCategory(); as category) {
               <div class="total-price-box">
-                <span>Total Price:</span>
+                <span>Total Price</span>
                 <strong>{{ category.price * quantity() | currency }}</strong>
               </div>
             }
 
             <button
               type="button"
-              class="btn btn-primary btn-block"
+              class="btn btn-reserve"
               [disabled]="
                 reserving() ||
                 !selectedCategory() ||
@@ -170,28 +199,12 @@
               "
               (click)="reserve()"
             >
-              {{ reserving() ? 'Reserving...' : 'Reserve Seats' }}
+              {{ reserving() ? 'Reserving...' : 'Reserve Seats →' }}
             </button>
+
+            <p class="reserve-note">Taxes and fees calculated at checkout.</p>
           </div>
         }
-
-        <div class="venue-card">
-          <div class="venue-header">
-            <span class="venue-icon">🏛️</span>
-            <div>
-              <span class="venue-label">Venue Location</span>
-              <h3 class="venue-name">{{ event()!.venue.name }}</h3>
-            </div>
-          </div>
-
-          <div class="venue-body">
-            <p class="venue-address">📍 {{ event()!.venue.address }}</p>
-            <div class="venue-capacity">
-              <span>Total Venue Capacity</span>
-              <strong>{{ event()!.venue.capacity }} Seats</strong>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   }

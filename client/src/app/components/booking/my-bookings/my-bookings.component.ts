@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 
 import { DatePipe, CurrencyPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 
 import { BookingService } from '../../../services/booking/booking.service';
@@ -20,7 +21,7 @@ import { ApiError } from '../../../models/api-error.model';
 
 @Component({
   selector: 'app-my-bookings',
-  imports: [DatePipe, CurrencyPipe],
+  imports: [DatePipe, CurrencyPipe, RouterLink],
   templateUrl: './my-bookings.component.html',
   styleUrl: './my-bookings.component.css',
 })
