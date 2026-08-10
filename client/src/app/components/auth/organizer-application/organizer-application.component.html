@@ -70,7 +70,7 @@
 
           <div class="form-field">
             <label for="phone" class="field-label">PHONE</label>
-            <input id="phone" type="tel" autocomplete="tel" placeholder="+1 (555) 000-0000" [formField]="applicationForm.phone" />
+            <input id="phone" type="tel" autocomplete="tel" placeholder="+201000000000" [formField]="applicationForm.phone" />
             @if (applicationForm.phone().touched() && applicationForm.phone().invalid()) {
               @for (error of applicationForm.phone().errors(); track error) {
                 <div class="field-error">{{ error.message }}</div>

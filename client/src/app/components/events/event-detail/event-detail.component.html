@@ -231,7 +231,7 @@
         <form [formRoot]="seatForm">
           <div class="form-field">
             <label for="seatName">Category Name (e.g. VIP, Standard)</label>
-            <input id="seatName" type="text" [formField]="seatForm.name" placeholder="VIP / Regular" />
+            <input id="seatName" type="text" [formField]="seatForm.name" placeholder="VIP / Standard" />
             @if (seatForm.name().touched() && seatForm.name().invalid()) {
               @for (error of seatForm.name().errors(); track error) {
                 <div class="field-error">{{ error.message }}</div>
