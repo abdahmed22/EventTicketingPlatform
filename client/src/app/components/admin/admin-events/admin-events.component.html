@@ -1,0 +1,63 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <h1>All Events</h1>
+      <p class="subtitle">Inspect every event across the system, regardless of status.</p>
+    </div>
+  </header>
+
+  <div class="filter-tabs">
+    @for (option of statusOptions; track option) {
+      <button
+        type="button"
+        class="filter-tab"
+        [class.active]="statusFilter() === option"
+        (click)="setFilter(option)"
+      >
+        {{ option }}
+      </button>
+    }
+  </div>
+
+  @if (success()) {
+    <div class="banner banner-success">{{ success() }}</div>
+  }
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-box">Loading events...</div>
+  } @else if (events().length === 0) {
+    <div class="empty-state">No events match this filter.</div>
+  } @else {
+    <div class="table card">
+      <div class="row head">
+        <span>Event</span>
+        <span>Category</span>
+        <span>Date</span>
+        <span>Status</span>
+        <span>Actions</span>
+      </div>
+      @for (event of events(); track event.id) {
+        <div class="row">
+          <span class="cell-main">
+            <span class="cell-title">{{ event.title }}</span>
+            <span class="cell-sub mono">org: {{ event.organizerId }}</span>
+          </span>
+          <span class="cell"><span class="category-badge">{{ event.category }}</span></span>
+          <span class="cell">{{ event.eventDate | date: 'mediumDate' }}<br />{{ event.eventTime }}</span>
+          <span class="cell">
+            <span class="status-badge" [class]="'status-' + event.status.toLowerCase()">{{ event.status }}</span>
+          </span>
+          <span class="cell actions">
+            <a [routerLink]="['/events', event.id]" class="btn btn-ghost">View</a>
+            @if (event.status !== 'CANCELLED') {
+              <button type="button" class="btn btn-danger" (click)="cancelEvent(event)">Cancel</button>
+            }
+          </span>
+        </div>
+      }
+    </div>
+  }
+</div>

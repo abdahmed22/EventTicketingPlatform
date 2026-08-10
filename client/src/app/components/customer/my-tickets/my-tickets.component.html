@@ -1,0 +1,87 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <h1>My Tickets</h1>
+      <p class="subtitle">Every ticket you hold across all of your bookings.</p>
+    </div>
+    <a routerLink="/customer/bookings" class="btn btn-secondary">View My Bookings</a>
+  </header>
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-box">Loading your tickets...</div>
+  } @else if (views().length === 0) {
+    <div class="empty-state">
+      <p>You don't have any tickets yet.</p>
+      <a routerLink="/" class="btn btn-primary">Browse Events</a>
+    </div>
+  } @else {
+    <div class="ticket-list">
+      @for (view of views(); track view.ticket.ticketCode) {
+        <div class="ticket-card">
+          <div class="ticket-head">
+            <div class="ticket-code">
+              <span class="code-label">Ticket Code</span>
+              <span class="code-value">{{ view.ticket.ticketCode }}</span>
+            </div>
+            <span class="status-badge" [class]="'status-' + view.ticket.status.toLowerCase()">
+              {{ ticketStatusLabel(view.ticket.status) }}
+            </span>
+          </div>
+
+          <div class="ticket-body">
+            <div class="info-block">
+              <span class="info-label">Event</span>
+              <span class="info-value">{{ view.event?.title ?? view.booking?.eventName ?? '—' }}</span>
+              @if (view.event) {
+                <span class="info-sub">
+                  {{ view.event.eventDate | date: 'mediumDate' }} at {{ view.event.eventTime }}
+                </span>
+              }
+            </div>
+
+            <div class="info-block">
+              <span class="info-label">Venue</span>
+              <span class="info-value">{{ view.event?.venue?.name ?? '—' }}</span>
+              @if (view.event?.venue?.address) {
+                <span class="info-sub">{{ view.event?.venue?.address }}</span>
+              }
+            </div>
+
+            <div class="info-block">
+              <span class="info-label">Seat Category</span>
+              <span class="info-value">{{ seatCategoryName(view) }}</span>
+            </div>
+
+            <div class="info-block">
+              <span class="info-label">Booking</span>
+              <span class="info-value">{{ view.booking?.quantity ?? 1 }} seat(s)</span>
+              @if (view.booking) {
+                <span class="info-sub">{{ view.booking.status }}</span>
+              }
+            </div>
+
+            <div class="info-block">
+              <span class="info-label">Total Price</span>
+              <span class="info-value">{{ view.ticket.totalPrice | currency }}</span>
+            </div>
+
+            <div class="info-block">
+              <span class="info-label">Issued</span>
+              <span class="info-value">{{ view.ticket.createdAt | date: 'medium' }}</span>
+            </div>
+          </div>
+
+          <div class="ticket-actions">
+            <a [routerLink]="['/customer/tickets', view.ticket.ticketCode]" class="btn btn-ghost">
+              Open Details
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,84 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <h1>Event Tickets &amp; Attendees</h1>
+      <p class="subtitle">
+        Tickets issued for your events, with attendee and check-in information.
+        Select an event to inspect its attendees.
+      </p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+  @if (success()) {
+    <div class="banner banner-success">{{ success() }}</div>
+  }
+
+  @if (loadingEvents()) {
+    <div class="loading-box">Loading your events...</div>
+  } @else if (events().length === 0) {
+    <div class="empty-state">You have no events yet. Create an event to start selling tickets.</div>
+  } @else {
+    <div class="event-picker">
+      <label for="event-select" class="picker-label">Event</label>
+      <select id="event-select" class="picker-select" [value]="selectedEventId()" (change)="selectEvent($any($event.target).value)">
+        @for (event of events(); track event.id) {
+          <option [value]="event.id">{{ event.title }} ({{ event.status }})</option>
+        }
+      </select>
+    </div>
+
+    @if (selectedEvent(); as ev) {
+      <div class="event-context">
+        <span class="context-item">📍 {{ ev.venue.name }}</span>
+        <span class="context-item">📅 {{ ev.eventDate | date: 'mediumDate' }} at {{ ev.eventTime }}</span>
+      </div>
+    }
+
+    @if (loadingTickets()) {
+      <div class="loading-box">Loading tickets...</div>
+    } @else if (tickets().length === 0) {
+      <div class="empty-state">No tickets have been issued for this event yet.</div>
+    } @else {
+      <div class="attendee-table">
+        <div class="table-head">
+          <span>Ticket Code</span>
+          <span>Attendee</span>
+          <span>Seat Category</span>
+          <span>Total</span>
+          <span>Status</span>
+          <span>Action</span>
+        </div>
+        @for (ticket of tickets(); track ticket.ticketCode) {
+          <div class="table-row">
+            <span class="cell mono" [title]="ticket.ticketCode">{{ ticket.ticketCode }}</span>
+            <span class="cell mono small" [title]="ticket.userOwnerUUID">{{ ticket.userOwnerUUID }}</span>
+            <span class="cell">{{ seatCategoryName(ticket) }}</span>
+            <span class="cell">{{ ticket.totalPrice | currency }}</span>
+            <span>
+              <span class="status-badge" [class]="'status-' + ticket.status.toLowerCase()">
+                {{ ticketStatusLabel(ticket.status) }}
+              </span>
+            </span>
+            <span class="cell">
+              @if (ticket.status !== 'CHECKED_IN' && ticket.status !== 'CANCELLED') {
+                <button
+                  type="button"
+                  class="btn btn-success sm"
+                  [disabled]="actioningCode() === ticket.ticketCode"
+                  (click)="checkIn(ticket)"
+                >
+                  {{ actioningCode() === ticket.ticketCode ? '...' : 'Check In' }}
+                </button>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </span>
+          </div>
+        }
+      </div>
+    }
+  }
+</div>

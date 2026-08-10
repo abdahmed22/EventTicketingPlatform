@@ -1,0 +1,169 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <h1>Review Dashboard</h1>
+      <p class="subtitle">
+        Both pending queues in one place. Approve or reject organizer applications and venue requests.
+      </p>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="load()">Refresh</button>
+  </header>
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+  @if (success()) {
+    <div class="banner banner-success">{{ success() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-box">Loading review queues...</div>
+  } @else if (summary(); as s) {
+    <div class="queues">
+      <!-- Organizer applications -->
+      <section class="queue">
+        <div class="queue-head">
+          <h2>Organizer Applications</h2>
+          <span class="count">{{ s.pendingOrganizerApplications }}</span>
+        </div>
+
+        @if (s.organizerApplications.length === 0) {
+          <p class="empty">No pending organizer applications.</p>
+        } @else {
+          <div class="queue-list">
+            @for (app of s.organizerApplications; track app.id) {
+              <div class="item-card">
+                <div class="item-main">
+                  <div class="item-identity">
+                    <h3>{{ app.name }}</h3>
+                    <span class="badge-pending">PENDING</span>
+                  </div>
+                  <p class="item-line">{{ app.email }} · {{ app.phone }}</p>
+                  @if (app.organizationName) {
+                    <p class="item-line">{{ app.organizationName }}</p>
+                  }
+                  @if (app.reason) {
+                    <p class="item-reason">"{{ app.reason }}"</p>
+                  }
+                  <p class="item-meta">Submitted {{ app.submittedAt | date: 'medium' }}</p>
+                </div>
+
+                <div class="item-actions">
+                  @if (isRejecting('application', app.id)) {
+                    <div class="reject-panel">
+                      <textarea
+                        rows="2"
+                        placeholder="Reason for rejection (optional)"
+                        [value]="rejectionReason()"
+                        (input)="rejectionReason.set($any($event.target).value)"
+                      ></textarea>
+                      <div class="reject-buttons">
+                        <button
+                          type="button"
+                          class="btn btn-danger"
+                          [disabled]="actioningId() === app.id"
+                          (click)="confirmRejectApplication(app.id)"
+                        >
+                          Confirm Reject
+                        </button>
+                        <button type="button" class="btn btn-ghost" (click)="cancelReject()">Cancel</button>
+                      </div>
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn btn-approve"
+                      [disabled]="actioningId() === app.id"
+                      (click)="approveApplication(app.id)"
+                    >
+                      {{ actioningId() === app.id ? 'Approving...' : 'Approve' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-reject"
+                      [disabled]="actioningId() === app.id"
+                      (click)="startRejectApplication(app.id)"
+                    >
+                      Reject
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Venue requests -->
+      <section class="queue">
+        <div class="queue-head">
+          <h2>Venue Requests</h2>
+          <span class="count">{{ s.pendingVenueRequests }}</span>
+        </div>
+
+        @if (s.venueRequests.length === 0) {
+          <p class="empty">No pending venue requests.</p>
+        } @else {
+          <div class="queue-list">
+            @for (venue of s.venueRequests; track venue.id) {
+              <div class="item-card">
+                <div class="item-main">
+                  <div class="item-identity">
+                    <h3>{{ venue.name }}</h3>
+                    <span class="badge-pending">PENDING</span>
+                  </div>
+                  <p class="item-line">📍 {{ venue.address }}</p>
+                  <p class="item-line">Capacity: <strong>{{ venue.capacity }}</strong></p>
+                  @if (venue.submittedByName) {
+                    <p class="item-line">Requester: {{ venue.submittedByName }}</p>
+                  }
+                </div>
+
+                <div class="item-actions">
+                  @if (isRejecting('venue', venue.id)) {
+                    <div class="reject-panel">
+                      <textarea
+                        rows="2"
+                        placeholder="Reason for rejection (optional)"
+                        [value]="rejectionReason()"
+                        (input)="rejectionReason.set($any($event.target).value)"
+                      ></textarea>
+                      <div class="reject-buttons">
+                        <button
+                          type="button"
+                          class="btn btn-danger"
+                          [disabled]="actioningId() === venue.id"
+                          (click)="confirmRejectVenue(venue.id)"
+                        >
+                          Confirm Reject
+                        </button>
+                        <button type="button" class="btn btn-ghost" (click)="cancelReject()">Cancel</button>
+                      </div>
+                    </div>
+                  } @else {
+                    <button
+                      type="button"
+                      class="btn btn-approve"
+                      [disabled]="actioningId() === venue.id"
+                      (click)="approveVenue(venue.id)"
+                    >
+                      {{ actioningId() === venue.id ? 'Approving...' : 'Approve' }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-reject"
+                      [disabled]="actioningId() === venue.id"
+                      (click)="startRejectVenue(venue.id)"
+                    >
+                      Reject
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </div>
+  }
+</div>
