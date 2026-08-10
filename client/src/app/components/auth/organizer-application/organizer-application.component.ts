@@ -86,4 +86,11 @@ export class OrganizerApplicationComponent {
       }
     }
   );
+
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.style.display = 'none';
+    }
+  }
 }

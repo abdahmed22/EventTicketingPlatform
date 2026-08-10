@@ -229,9 +229,22 @@
   display: flex;
   align-items: flex-start;
   padding: 12px;
+  overflow: hidden;
+}
+
+.card-category-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
 }
 
 .category-badge {
+  position: relative;
+  z-index: 2;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -240,6 +253,7 @@
   padding: 4px 10px;
   border-radius: var(--radius-sm, 6px);
   text-transform: uppercase;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .card-body {

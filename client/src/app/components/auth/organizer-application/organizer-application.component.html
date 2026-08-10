@@ -1,105 +1,132 @@
 <div class="auth-page">
-  <div class="auth-card">
-    @if (submitted()) {
-      <div class="confirmation">
-        <h1>Application Submitted</h1>
-        <p class="auth-subtitle">
-          Thanks! We've received your organizer application for <strong>{{ submittedEmail() }}</strong>.
-          An admin will review it, and you'll be able to log in as an organizer once it's approved.
+  <!-- Left Side: Large Vertical Event Hero Banner -->
+  <div class="auth-hero-side">
+    <img
+      src="/images/auth/login-event.jpg"
+      alt="Eventix Organizer Experience"
+      class="hero-bg-img"
+      (error)="onImageError($event)"
+    />
+    <div class="hero-overlay-gradient"></div>
+
+    <div class="hero-floating-card">
+      <h2>Seamless Event Management</h2>
+      <p>Join thousands of professionals organizing and attending premium experiences worldwide.</p>
+    </div>
+  </div>
+
+  <!-- Right Side: Organizer Form & Navigation -->
+  <div class="auth-form-side">
+    <!-- Top Sub-Nav Tabs -->
+    <div class="auth-tabs">
+      <a routerLink="/login" class="auth-tab">Login</a>
+      <a routerLink="/register" class="auth-tab">Register</a>
+      <a routerLink="/register/organizer" class="auth-tab active">Organizer App</a>
+    </div>
+
+    <!-- Centered Organizer Card -->
+    <div class="auth-card">
+      @if (submitted()) {
+        <div class="confirmation">
+          <h1 class="card-title">Application Submitted</h1>
+          <p class="card-subtitle">
+            Thanks! We've received your organizer application for <strong>{{ submittedEmail() }}</strong>.
+            An admin will review it, and you'll be able to log in as an organizer once it's approved.
+          </p>
+          <a class="submit-btn confirmation-link" routerLink="/login">Back to Log In</a>
+        </div>
+      } @else {
+        <h1 class="card-title">Become an Organizer</h1>
+        <p class="card-subtitle">
+          Apply to host and manage your own events. We'll review your application before you can log in.
         </p>
-        <a class="submit-btn confirmation-link" routerLink="/login">Back to Log In</a>
-      </div>
-    } @else {
-      <h1>Become an Organizer</h1>
-      <p class="auth-subtitle">
-        Apply to host and manage your own events. We'll review your application before you can log in.
-      </p>
 
-      @if (applicationForm().invalid() && applicationForm().errors().length) {
-        @for (error of applicationForm().errors(); track error) {
-          <p class="form-error">{{ error.message }}</p>
+        @if (applicationForm().invalid() && applicationForm().errors().length) {
+          @for (error of applicationForm().errors(); track error) {
+            <p class="form-error">{{ error.message }}</p>
+          }
         }
+
+        <form [formRoot]="applicationForm">
+          <div class="form-field">
+            <label for="name" class="field-label">FULL NAME</label>
+            <input id="name" type="text" autocomplete="name" placeholder="John Doe" [formField]="applicationForm.name" />
+            @if (applicationForm.name().touched() && applicationForm.name().invalid()) {
+              @for (error of applicationForm.name().errors(); track error) {
+                <div class="field-error">{{ error.message }}</div>
+              }
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="email" class="field-label">EMAIL</label>
+            <input id="email" type="email" autocomplete="email" placeholder="name@company.com" [formField]="applicationForm.email" />
+            @if (applicationForm.email().touched() && applicationForm.email().invalid()) {
+              @for (error of applicationForm.email().errors(); track error) {
+                <div class="field-error">{{ error.message }}</div>
+              }
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="phone" class="field-label">PHONE</label>
+            <input id="phone" type="tel" autocomplete="tel" placeholder="+1 (555) 000-0000" [formField]="applicationForm.phone" />
+            @if (applicationForm.phone().touched() && applicationForm.phone().invalid()) {
+              @for (error of applicationForm.phone().errors(); track error) {
+                <div class="field-error">{{ error.message }}</div>
+              }
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="organizationName" class="field-label">ORGANIZATION NAME <span class="optional">(optional)</span></label>
+            <input id="organizationName" type="text" placeholder="Acme Events" [formField]="applicationForm.organizationName" />
+          </div>
+
+          <div class="form-field">
+            <label for="reason" class="field-label">WHY DO YOU WANT TO ORGANIZE EVENTS? <span class="optional">(optional)</span></label>
+            <textarea id="reason" rows="3" placeholder="Tell us about your event hosting experience..." [formField]="applicationForm.reason"></textarea>
+          </div>
+
+          <div class="form-field">
+            <label for="password" class="field-label">PASSWORD</label>
+            <input id="password" type="password" autocomplete="new-password" placeholder="••••••••" [formField]="applicationForm.password" />
+            @if (applicationForm.password().touched() && applicationForm.password().invalid()) {
+              @for (error of applicationForm.password().errors(); track error) {
+                <div class="field-error">{{ error.message }}</div>
+              }
+            }
+          </div>
+
+          <div class="form-field">
+            <label for="confirmPassword" class="field-label">CONFIRM PASSWORD</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              autocomplete="new-password"
+              placeholder="••••••••"
+              [formField]="applicationForm.confirmPassword"
+            />
+            @if (applicationForm.confirmPassword().touched() && applicationForm.confirmPassword().invalid()) {
+              @for (error of applicationForm.confirmPassword().errors(); track error) {
+                <div class="field-error">{{ error.message }}</div>
+              }
+            }
+          </div>
+
+          <button class="submit-btn" type="submit" [disabled]="applicationForm().submitting()">
+            @if (applicationForm().submitting()) {
+              Submitting...
+            } @else {
+              Submit Application →
+            }
+          </button>
+        </form>
+
+        <div class="auth-card-footer">
+          <p>Already have an account? <a routerLink="/login" class="link-primary">Log in</a></p>
+        </div>
       }
-
-      <form [formRoot]="applicationForm">
-        <div class="form-field">
-          <label for="name">Full name</label>
-          <input id="name" type="text" autocomplete="name" [formField]="applicationForm.name" />
-          @if (applicationForm.name().touched() && applicationForm.name().invalid()) {
-            @for (error of applicationForm.name().errors(); track error) {
-              <div class="field-error">{{ error.message }}</div>
-            }
-          }
-        </div>
-
-        <div class="form-field">
-          <label for="email">Email</label>
-          <input id="email" type="email" autocomplete="email" [formField]="applicationForm.email" />
-          @if (applicationForm.email().touched() && applicationForm.email().invalid()) {
-            @for (error of applicationForm.email().errors(); track error) {
-              <div class="field-error">{{ error.message }}</div>
-            }
-          }
-        </div>
-
-        <div class="form-field">
-          <label for="phone">Phone</label>
-          <input id="phone" type="tel" autocomplete="tel" [formField]="applicationForm.phone" />
-          @if (applicationForm.phone().touched() && applicationForm.phone().invalid()) {
-            @for (error of applicationForm.phone().errors(); track error) {
-              <div class="field-error">{{ error.message }}</div>
-            }
-          }
-        </div>
-
-        <div class="form-field">
-          <label for="organizationName">Organization name <span class="optional">(optional)</span></label>
-          <input id="organizationName" type="text" [formField]="applicationForm.organizationName" />
-        </div>
-
-        <div class="form-field">
-          <label for="reason">Why do you want to organize events? <span class="optional">(optional)</span></label>
-          <textarea id="reason" rows="3" [formField]="applicationForm.reason"></textarea>
-        </div>
-
-        <div class="form-field">
-          <label for="password">Password</label>
-          <input id="password" type="password" autocomplete="new-password" [formField]="applicationForm.password" />
-          @if (applicationForm.password().touched() && applicationForm.password().invalid()) {
-            @for (error of applicationForm.password().errors(); track error) {
-              <div class="field-error">{{ error.message }}</div>
-            }
-          }
-        </div>
-
-        <div class="form-field">
-          <label for="confirmPassword">Confirm password</label>
-          <input
-            id="confirmPassword"
-            type="password"
-            autocomplete="new-password"
-            [formField]="applicationForm.confirmPassword"
-          />
-          @if (applicationForm.confirmPassword().touched() && applicationForm.confirmPassword().invalid()) {
-            @for (error of applicationForm.confirmPassword().errors(); track error) {
-              <div class="field-error">{{ error.message }}</div>
-            }
-          }
-        </div>
-
-        <button class="submit-btn" type="submit" [disabled]="applicationForm().submitting()">
-          @if (applicationForm().submitting()) {
-            Submitting...
-          } @else {
-            Submit Application
-          }
-        </button>
-      </form>
-
-      <div class="auth-links">
-        <p>Just want to browse and book events? <a routerLink="/register">Sign up as a customer</a></p>
-        <p>Already have an account? <a routerLink="/login">Log in</a></p>
-      </div>
-    }
+    </div>
   </div>
 </div>

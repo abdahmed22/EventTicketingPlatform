@@ -129,6 +129,12 @@
           @for (event of events(); track event.id) {
             <div class="event-card">
               <div class="card-image-area">
+                <img
+                  [src]="getCategoryImage(event.category)"
+                  [alt]="event.title"
+                  class="card-category-img"
+                  (error)="onImageError($event)"
+                />
                 <span class="category-badge">{{ event.category }}</span>
               </div>
 

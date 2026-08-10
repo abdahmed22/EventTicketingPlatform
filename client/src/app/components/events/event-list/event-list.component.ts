@@ -6,6 +6,7 @@ import { VenueService } from '../../../services/venue/venue.service';
 import { EventCategory, EventFilterParams, EventSummary } from '../../../models/event.model';
 import { VenueResponse } from '../../../models/venue.model';
 import { ApiError } from '../../../models/api-error.model';
+import { getEventCategoryImage } from '../../../utils/event-image.util';
 
 type CategoryOption = EventCategory | 'ALL';
 
@@ -114,5 +115,16 @@ export class EventListComponent {
   getVenueName(venueId: string): string {
     const v = this.venues().find((item) => item.id === venueId);
     return v ? `${v.name} (${v.address})` : 'Venue details in event view';
+  }
+
+  getCategoryImage(category: EventCategory): string {
+    return getEventCategoryImage(category);
+  }
+
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.style.display = 'none';
+    }
   }
 }

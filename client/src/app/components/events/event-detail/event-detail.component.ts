@@ -9,9 +9,10 @@ import { SeatCategoryService } from '../../../services/seat-category/seat-catego
 import { BookingService } from '../../../services/booking/booking.service';
 import { AuthService } from '../../../services/auth/auth.service';
 
-import { EventResponse } from '../../../models/event.model';
+import { EventCategory, EventResponse } from '../../../models/event.model';
 import { SeatCategoryCreateRequest, SeatCategorySummary } from '../../../models/seat-category.model';
 import { ApiError } from '../../../models/api-error.model';
+import { getEventCategoryImage } from '../../../utils/event-image.util';
 
 interface SeatCategoryFormValue {
   name: string;
@@ -276,5 +277,16 @@ export class EventDetailComponent {
   getAvailabilityPercent(sc: SeatCategorySummary): number {
     if (!sc.totalSeats) return 0;
     return Math.round((sc.availableSeats / sc.totalSeats) * 100);
+  }
+
+  getCategoryImage(category: EventCategory): string {
+    return getEventCategoryImage(category);
+  }
+
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.style.display = 'none';
+    }
   }
 }

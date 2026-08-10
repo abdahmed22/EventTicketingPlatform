@@ -16,6 +16,12 @@
   } @else if (event()) {
     <!-- Hero Banner -->
     <div class="event-hero">
+      <img
+        [src]="getCategoryImage(event()!.category)"
+        [alt]="event()!.title"
+        class="hero-category-img"
+        (error)="onImageError($event)"
+      />
       <div class="hero-overlay">
         <span class="hero-category-badge">{{ event()!.category }}</span>
         <h1 class="hero-title">{{ event()!.title }}</h1>
