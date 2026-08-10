@@ -7,10 +7,12 @@
   </header>
 
   <div class="content-grid">
-    <!-- Submit Request Form -->
+    <!-- Submit / Edit Request Form -->
     <div class="form-card">
-      <h2>Submit New Venue Request</h2>
-      <p class="card-subtitle">Request a venue location to host your upcoming events.</p>
+      <h2>{{ editingVenueId() ? 'Edit Venue Details' : 'Submit New Venue Request' }}</h2>
+      <p class="card-subtitle">
+        {{ editingVenueId() ? 'Update the details for your venue location.' : 'Request a venue location to host your upcoming events.' }}
+      </p>
 
       @if (successMessage()) {
         <div class="banner banner-success">{{ successMessage() }}</div>
@@ -53,9 +55,14 @@
           }
         </div>
 
-        <button type="submit" class="submit-btn" [disabled]="venueForm().submitting()">
-          {{ venueForm().submitting() ? 'Submitting...' : 'Submit Venue Request' }}
-        </button>
+        <div class="form-actions-row">
+          <button type="submit" class="submit-btn" [disabled]="venueForm().submitting()">
+            {{ venueForm().submitting() ? 'Saving...' : (editingVenueId() ? 'Update Venue' : 'Submit Venue Request') }}
+          </button>
+          @if (editingVenueId()) {
+            <button type="button" class="btn btn-ghost" (click)="cancelEdit()">Cancel</button>
+          }
+        </div>
       </form>
     </div>
 
@@ -99,6 +106,12 @@
                 @if (venue.reviewedAt) {
                   <span>Reviewed {{ venue.reviewedAt | date: 'mediumDate' }}</span>
                 }
+              </div>
+
+              <div class="venue-card-actions">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="startEdit(venue)">
+                  ✏️ Edit Venue
+                </button>
               </div>
 
               @if (venue.status === 'APPROVED') {

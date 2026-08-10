@@ -1,0 +1,215 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-create-ticket-table
+      author: event-ticketing
+      comment: Create tickets table for EventTicketing.model.Ticket entity
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: tickets
+      changes:
+        - createTable:
+            tableName: tickets
+            remarks: Stores issued tickets linked to bookings, events, venues and users
+            columns:
+              - column:
+                  name: uuid
+                  type: UUID
+                  # CHAR(36) for MySQL / H2, UUID for PostgreSQL
+                  autoIncrement: false
+                  remarks: PK - generated via @UuidGenerator
+                  constraints:
+                    primaryKey: true
+                    primaryKeyName: pk_tickets
+                    nullable: false
+
+              - column:
+                  name: ticket_code
+                  type: VARCHAR(64)
+                  remarks: Unique human-readable code (field ticketCode)
+                  constraints:
+                    unique: true
+                    uniqueConstraintName: uq_tickets_ticket_code
+                    nullable: true
+
+              - column:
+                  name: creation_date
+                  type: TIMESTAMPTZ
+                  # DATETIME(6) for MySQL, TIMESTAMP for H2
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  remarks: Field createdAt (Instant) - set in @PrePersist
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: booking_id
+                  type: UUID
+                  remarks: Field bookingId - @JoinColumn(name="booking_id")
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: seat
+                  type: UUID
+                  remarks: Field seat - @JoinColumn(name="seat") - FK to seat/seat_categories
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: evnt
+                  type: UUID
+                  remarks: Field evnt - @JoinColumn(name="evnt") - FK to events (consider renaming to event_id)
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: venue
+                  type: UUID
+                  remarks: Field venue - @JoinColumn(name="venue") - FK to venues
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: userOwnerUUID
+                  type: UUID
+                  remarks: Field userOwnerUUID - @JoinColumn(name="userOwnerUUID") - ticket owner
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: total_price
+                  type: DECIMAL(19, 2)
+                  remarks: Field totalPrice (BigDecimal)
+                  constraints:
+                    nullable: true
+
+              - column:
+                  name: status
+                  type: VARCHAR(20)
+                  defaultValue: ISSUED
+                  remarks: Field status (TicketStatus enum) - @Column(name="status") - default ISSUED via @PrePersist, store as STRING
+                  constraints:
+                    nullable: false
+
+              - column:
+                  name: checked_in_at
+                  type: TIMESTAMPTZ
+                  remarks: Field checkedInAt (Instant) - @Column(name="checked_in_at") - nullable, set on check-in
+                  constraints:
+                    nullable: true
+
+        # Foreign keys - adjust referencedTableName/referencedColumnNames to your actual schema
+        # Comment out any FK if the referenced table does not exist yet
+        - addForeignKeyConstraint:
+            baseTableName: tickets
+            baseColumnNames: booking_id
+            constraintName: fk_tickets_booking_id
+            referencedTableName: bookings
+            referencedColumnNames: uuid
+            onDelete: RESTRICT
+            onUpdate: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: tickets
+            baseColumnNames: seat
+            constraintName: fk_tickets_seat
+            referencedTableName: seats
+            referencedColumnNames: uuid
+            onDelete: RESTRICT
+            onUpdate: CASCADE
+            # if your table is seat_categories use referencedTableName: seat_categories
+
+        - addForeignKeyConstraint:
+            baseTableName: tickets
+            baseColumnNames: evnt
+            constraintName: fk_tickets_evnt
+            referencedTableName: events
+            referencedColumnNames: uuid
+            onDelete: RESTRICT
+            onUpdate: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: tickets
+            baseColumnNames: venue
+            constraintName: fk_tickets_venue
+            referencedTableName: venues
+            referencedColumnNames: uuid
+            onDelete: RESTRICT
+            onUpdate: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: tickets
+            baseColumnNames: userOwnerUUID
+            constraintName: fk_tickets_user_owner
+            referencedTableName: users
+            referencedColumnNames: uuid
+            onDelete: RESTRICT
+            onUpdate: CASCADE
+
+        # Enum check - update values to match EventTicketing.model.enums.TicketStatus
+        - sql:
+            dbms: postgresql
+            sql: ALTER TABLE tickets ADD CONSTRAINT chk_tickets_status CHECK (status IN ('ISSUED','VALID','USED','CANCELLED','REFUNDED','EXPIRED','TRANSFERRED'));
+
+        # Indexes for FKs and queries
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_booking_id
+            columns:
+              - column:
+                  name: booking_id
+
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_seat
+            columns:
+              - column:
+                  name: seat
+
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_evnt
+            columns:
+              - column:
+                  name: evnt
+
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_venue
+            columns:
+              - column:
+                  name: venue
+
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_user_owner
+            columns:
+              - column:
+                  name: userOwnerUUID
+
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_status
+            columns:
+              - column:
+                  name: status
+
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_checked_in_at
+            columns:
+              - column:
+                  name: checked_in_at
+
+        # ticket_code already has unique constraint, this index speeds up lookups (optional)
+        - createIndex:
+            tableName: tickets
+            indexName: idx_tickets_ticket_code
+            columns:
+              - column:
+                  name: ticket_code
+
+      rollback:
+        - dropTable:
+            tableName: tickets

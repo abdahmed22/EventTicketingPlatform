@@ -32,6 +32,8 @@ export class MyVenuesComponent {
   readonly successMessage = signal<string | null>(null);
   readonly statusFilter = signal<StatusFilter>('ALL');
 
+  readonly editingVenueId = signal<string | null>(null);
+
   private readonly venueModel = signal<VenueFormValue>({
     name: '',
     address: '',
@@ -58,13 +60,20 @@ export class MyVenuesComponent {
               address: val.address,
               capacity: val.capacity
             };
-            await firstValueFrom(this.venueService.submit(req));
-            this.successMessage.set('Venue request submitted successfully! Pending admin approval.');
+            const editId = this.editingVenueId();
+            if (editId) {
+              await firstValueFrom(this.venueService.organizerUpdate(editId, req));
+              this.successMessage.set('Venue updated successfully!');
+            } else {
+              await firstValueFrom(this.venueService.submit(req));
+              this.successMessage.set('Venue request submitted successfully! Pending admin approval.');
+            }
+            this.editingVenueId.set(null);
             this.loadVenues();
             this.venueModel.set({ name: '', address: '', capacity: 500 });
             return;
           } catch (err) {
-            const message = err instanceof ApiError ? err.message : 'Failed to submit venue request.';
+            const message = err instanceof ApiError ? err.message : 'Failed to save venue.';
             return { kind: 'serverError', message };
           }
         }
@@ -74,6 +83,20 @@ export class MyVenuesComponent {
 
   constructor() {
     this.loadVenues();
+  }
+
+  startEdit(venue: VenueResponse): void {
+    this.editingVenueId.set(venue.id);
+    this.venueModel.set({
+      name: venue.name,
+      address: venue.address,
+      capacity: venue.capacity
+    });
+  }
+
+  cancelEdit(): void {
+    this.editingVenueId.set(null);
+    this.venueModel.set({ name: '', address: '', capacity: 500 });
   }
 
   setFilter(filter: StatusFilter): void {

@@ -33,6 +33,13 @@ public class VenueController {
         return ResponseEntity.status(HttpStatus.CREATED).body(venueService.submit(organizer, request));
     }
 
+    @PutMapping("/organizer/venues/{id}")
+    public ResponseEntity<VenueDto.Response> updateOrganizerVenue(@AuthenticationPrincipal User organizer,
+                                                            @PathVariable UUID id,
+                                                            @Valid @RequestBody VenueDto.CreateRequest request) {
+        return ResponseEntity.ok(venueService.update(id, request, organizer));
+    }
+
     @GetMapping("/organizer/venues")
     public ResponseEntity<List<VenueDto.Response>> listMyVenues(@AuthenticationPrincipal User organizer) {
         return ResponseEntity.ok(venueService.listMyVenues(organizer));
@@ -42,6 +49,13 @@ public class VenueController {
     public ResponseEntity<List<VenueDto.Response>> listAdminVenues(
             @RequestParam(required = false) Venue.Status status) {
         return ResponseEntity.ok(venueService.listPendingOrAll(status));
+    }
+
+    @PutMapping("/admin/venues/{id}")
+    public ResponseEntity<VenueDto.Response> updateAdminVenue(@AuthenticationPrincipal User admin,
+                                                        @PathVariable UUID id,
+                                                        @Valid @RequestBody VenueDto.CreateRequest request) {
+        return ResponseEntity.ok(venueService.update(id, request, admin));
     }
 
     @PostMapping("/admin/venues/{id}/approve")

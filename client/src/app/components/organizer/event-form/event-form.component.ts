@@ -123,7 +123,9 @@ export class EventFormComponent {
   }
 
   loadEventForEdit(id: string): void {
-    this.eventService.getPublicById(id).subscribe({
+    // Use organizer endpoint so DRAFT events (not publicly accessible) can be edited.
+    // getPublicById only returns PUBLISHED events and would 404 on drafts.
+    this.eventService.getOrganizerById(id).subscribe({
       next: (evt) => {
         this.eventModel.set({
           title: evt.title,
