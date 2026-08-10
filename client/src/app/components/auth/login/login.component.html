@@ -1,47 +1,88 @@
 <div class="auth-page">
-  <div class="auth-card">
-    <h1>Log In</h1>
-    <p class="auth-subtitle">Welcome back. Enter your details to continue.</p>
+  <!-- Left Side: Large Vertical Event Hero Banner -->
+  <div class="auth-hero-side">
+    <img
+      src="/images/auth/login-event.jpg"
+      alt="Eventix Login Experience"
+      class="hero-bg-img"
+      (error)="onImageError($event)"
+    />
+    <div class="hero-overlay-gradient"></div>
 
-    @if (loginForm().invalid() && loginForm().errors().length) {
-      @for (error of loginForm().errors(); track error) {
-        <p class="form-error">{{ error.message }}</p>
+    <div class="hero-floating-card">
+      <h2>Seamless Event Management</h2>
+      <p>Join thousands of professionals organizing and attending premium experiences worldwide.</p>
+    </div>
+  </div>
+
+  <!-- Right Side: Login Form & Navigation -->
+  <div class="auth-form-side">
+    <!-- Top Sub-Nav Tabs -->
+    <div class="auth-tabs">
+      <a routerLink="/login" class="auth-tab active">Login</a>
+      <a routerLink="/register" class="auth-tab">Register</a>
+      <a routerLink="/register/organizer" class="auth-tab">Organizer App</a>
+    </div>
+
+    <!-- Centered Login Card -->
+    <div class="auth-card">
+      <h1 class="card-title">Welcome back</h1>
+      <p class="card-subtitle">Enter your details to access your account.</p>
+
+      @if (loginForm().invalid() && loginForm().errors().length) {
+        @for (error of loginForm().errors(); track error) {
+          <p class="form-error">{{ error.message }}</p>
+        }
       }
-    }
 
-    <form [formRoot]="loginForm">
-      <div class="form-field">
-        <label for="identifier">Email or phone</label>
-        <input id="identifier" type="text" autocomplete="username" [formField]="loginForm.identifier" />
-        @if (loginForm.identifier().touched() && loginForm.identifier().invalid()) {
-          @for (error of loginForm.identifier().errors(); track error) {
-            <div class="field-error">{{ error.message }}</div>
+      <form [formRoot]="loginForm">
+        <div class="form-field">
+          <label for="identifier" class="field-label">EMAIL</label>
+          <input
+            id="identifier"
+            type="text"
+            autocomplete="username"
+            placeholder="name@company.com"
+            [formField]="loginForm.identifier"
+          />
+          @if (loginForm.identifier().touched() && loginForm.identifier().invalid()) {
+            @for (error of loginForm.identifier().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
           }
-        }
-      </div>
+        </div>
 
-      <div class="form-field">
-        <label for="password">Password</label>
-        <input id="password" type="password" autocomplete="current-password" [formField]="loginForm.password" />
-        @if (loginForm.password().touched() && loginForm.password().invalid()) {
-          @for (error of loginForm.password().errors(); track error) {
-            <div class="field-error">{{ error.message }}</div>
+        <div class="form-field">
+          <div class="label-row">
+            <label for="password" class="field-label">PASSWORD</label>
+            <a href="javascript:void(0)" class="forgot-link">Forgot password?</a>
+          </div>
+          <input
+            id="password"
+            type="password"
+            autocomplete="current-password"
+            placeholder="••••••••"
+            [formField]="loginForm.password"
+          />
+          @if (loginForm.password().touched() && loginForm.password().invalid()) {
+            @for (error of loginForm.password().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
           }
-        }
+        </div>
+
+        <button class="submit-btn" type="submit" [disabled]="loginForm().submitting()">
+          @if (loginForm().submitting()) {
+            Logging in...
+          } @else {
+            Login →
+          }
+        </button>
+      </form>
+
+      <div class="auth-card-footer">
+        <p>Don't have an account? <a routerLink="/register" class="link-primary">Register</a></p>
       </div>
-
-      <button class="submit-btn" type="submit" [disabled]="loginForm().submitting()">
-        @if (loginForm().submitting()) {
-          Logging in...
-        } @else {
-          Log In
-        }
-      </button>
-    </form>
-
-    <div class="auth-links">
-      <p>No account? <a routerLink="/register">Sign up</a></p>
-      <p>Want to host events instead? <a routerLink="/register/organizer">Apply to become an organizer</a></p>
     </div>
   </div>
 </div>

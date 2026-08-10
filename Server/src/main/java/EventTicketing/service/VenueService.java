@@ -41,6 +41,24 @@ public class VenueService {
                 .toList();
     }
 
+    @Transactional
+    public VenueDto.Response update(UUID venueId, VenueDto.CreateRequest request, User user) {
+        Venue venue = getVenue(venueId);
+        if (user.getRole() != UserRole.ADMIN && (venue.getRequestedBy() == null || !venue.getRequestedBy().getId().equals(user.getId()))) {
+            throw new ForbiddenActionException("You do not have permission to edit this venue.");
+        }
+        if (request.name() != null && !request.name().isBlank()) {
+            venue.setName(request.name());
+        }
+        if (request.address() != null && !request.address().isBlank()) {
+            venue.setAddress(request.address());
+        }
+        if (request.capacity() > 0) {
+            venue.setCapacity(request.capacity());
+        }
+        return VenueDto.Response.from(venueRepository.save(venue));
+    }
+
     public List<VenueDto.Response> listPendingOrAll(Venue.Status status) {
         if (status == null) {
             return venueRepository.findAll().stream().map(VenueDto.Response::from).toList();

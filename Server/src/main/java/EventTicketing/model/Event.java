@@ -91,11 +91,37 @@ public class Event {
         if (status == null) {
             status = Status.DRAFT;
         }
+        if (venueId == null && venue != null) {
+            venueId = venue.getId();
+        }
+        if (organizerId == null && organizer != null) {
+            organizerId = organizer.getId();
+        }
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        if (venueId == null && venue != null) {
+            venueId = venue.getId();
+        }
+        if (organizerId == null && organizer != null) {
+            organizerId = organizer.getId();
+        }
+    }
+
+    public void setVenue(Venue venue) {
+        this.venue = venue;
+        if (venue != null) {
+            this.venueId = venue.getId();
+        }
+    }
+
+    public void setOrganizer(User organizer) {
+        this.organizer = organizer;
+        if (organizer != null) {
+            this.organizerId = organizer.getId();
+        }
     }
 
     // Bridge for eventService: combines eventDate + eventTime into a single LocalDateTime

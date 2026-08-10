@@ -1,0 +1,150 @@
+<div class="my-bookings-page">
+
+  <div class="page-header">
+    <h1>My Bookings</h1>
+    <p>Manage your upcoming and past event reservations.</p>
+  </div>
+
+
+  @if (loading()) {
+    <div class="loading">Loading bookings...</div>
+  }
+
+
+  @if (error()) {
+    <div class="error-message">{{ error() }}</div>
+  }
+
+
+  @if (!loading() && bookings().length === 0) {
+    <div class="empty-state">
+      <h2>No bookings yet</h2>
+      <p>You don't have any bookings yet.</p>
+    </div>
+  }
+
+
+  @if (bookings().length > 0) {
+    <div class="bookings-grid">
+
+      @for (booking of bookings(); track booking.id) {
+
+        <article
+          class="booking-card"
+          [class.card-pending]="booking.status === 'PENDING'"
+          [class.card-confirmed]="booking.status === 'CONFIRMED'"
+          [class.card-cancelled]="booking.status === 'CANCELLED'"
+          [class.card-expired]="booking.status === 'EXPIRED'"
+        >
+          <!-- Card Top: Status Badge + Timer -->
+          <div class="card-top-row">
+            <span
+              class="status-badge"
+              [class.pending]="booking.status === 'PENDING'"
+              [class.confirmed]="booking.status === 'CONFIRMED'"
+              [class.cancelled]="booking.status === 'CANCELLED'"
+              [class.expired]="booking.status === 'EXPIRED'"
+            >
+              @if (booking.status === 'PENDING') { ◷ PENDING PAYMENT }
+              @if (booking.status === 'CONFIRMED') { ✓ CONFIRMED }
+              @if (booking.status === 'CANCELLED') { ✕ CANCELLED }
+              @if (booking.status === 'EXPIRED') { ◷ EXPIRED }
+            </span>
+
+            @if (booking.status === 'PENDING' && remainingTimes()[booking.id]) {
+              <span class="countdown-badge">
+                ⏱ {{ remainingTimes()[booking.id] }}
+              </span>
+            }
+          </div>
+
+          <!-- Event Name -->
+          <h2 class="booking-event-name">{{ booking.eventName }}</h2>
+
+          <!-- Date info from createdAt -->
+          <p class="booking-date-info">
+            📅 {{ booking.createdAt | date:'mediumDate' }}
+          </p>
+
+          <!-- Booking Details Table -->
+          <div class="booking-details-table">
+            <div class="detail-row">
+              <div class="detail-cell">
+                <span class="detail-label">Seat Category</span>
+                <span class="detail-value">{{ booking.seatCategoryName }}</span>
+              </div>
+              <div class="detail-cell">
+                <span class="detail-label">Quantity</span>
+                <span class="detail-value">{{ booking.quantity }}</span>
+              </div>
+            </div>
+
+            <div class="detail-row total-row">
+              <span class="detail-label">Total Amount</span>
+              <span class="detail-value total-amount">{{ booking.totalPrice | currency }}</span>
+            </div>
+
+            @if (booking.status === 'EXPIRED') {
+              <div class="detail-row">
+                <span class="detail-label">Status</span>
+                <span class="detail-value expired-text">Payment Timeout</span>
+              </div>
+            }
+          </div>
+
+
+          <!-- Booking Actions -->
+          @if (booking.status === 'PENDING') {
+            <div class="booking-actions">
+              <button
+                type="button"
+                class="action-btn cancel-btn"
+                [disabled]="actioningId() === booking.id"
+                (click)="cancelBooking(booking.id)"
+              >
+                @if (actioningId() === booking.id) { Processing... } @else { Cancel }
+              </button>
+              <button
+                type="button"
+                class="action-btn confirm-btn"
+                [disabled]="actioningId() === booking.id"
+                (click)="confirmBooking(booking.id)"
+              >
+                @if (actioningId() === booking.id) { Confirming... } @else { Confirm }
+              </button>
+            </div>
+          }
+
+          @if (booking.status === 'CONFIRMED') {
+            <div class="booking-actions">
+              <button
+                type="button"
+                class="action-btn cancel-btn full-width"
+                [disabled]="actioningId() === booking.id"
+                (click)="cancelBooking(booking.id)"
+              >
+                @if (actioningId() === booking.id) { Processing... } @else { Cancel }
+              </button>
+            </div>
+          }
+
+          @if (booking.status === 'CANCELLED') {
+            <div class="booking-actions">
+              <span class="action-info">Event Cancelled</span>
+            </div>
+          }
+
+          @if (booking.status === 'EXPIRED') {
+            <div class="booking-actions">
+              <a routerLink="/" class="action-btn view-btn full-width">View Event Page</a>
+            </div>
+          }
+
+        </article>
+
+      }
+
+    </div>
+  }
+
+</div>
