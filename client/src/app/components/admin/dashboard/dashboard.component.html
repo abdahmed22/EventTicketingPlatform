@@ -18,7 +18,7 @@
 
   @if (loading()) {
     <div class="loading-box">Loading review queues...</div>
-  } @else if (summary(); as s) {
+  } @else {@if (summary(); as s) {
     <div class="queues">
       <!-- Organizer applications -->
       <section class="queue">
@@ -165,5 +165,5 @@
         }
       </section>
     </div>
-  }
+  } }
 </div>

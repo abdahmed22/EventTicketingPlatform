@@ -7,7 +7,7 @@
 
   @if (loading()) {
     <div class="loading-box">Loading booking...</div>
-  } @else if (booking(); as b) {
+  } @else { @if (booking(); as b) {
     <header class="booking-header">
       <div class="title-row">
         <h1>{{ b.eventName }}</h1>
@@ -54,5 +54,5 @@
         </div>
       }
     </section>
-  }
+  } }
 </div>

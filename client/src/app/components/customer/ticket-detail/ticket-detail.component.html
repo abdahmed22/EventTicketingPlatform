@@ -7,7 +7,7 @@
 
   @if (loading()) {
     <div class="loading-box">Loading ticket...</div>
-  } @else if (ticket(); as t) {
+  } @else { @if (ticket(); as t) {
     <article class="ticket">
       <header class="ticket-header">
         <div>
@@ -66,5 +66,6 @@
         </div>
       </section>
     </article>
+  }
   }
 </div>
