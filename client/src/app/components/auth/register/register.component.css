@@ -1,61 +1,171 @@
 :host {
   display: block;
+  width: 100%;
 }
 
 .auth-page {
   min-height: calc(100vh - var(--nav-height, 64px) - 80px);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
+  width: 100%;
   background: var(--color-bg, #F9FAFB);
 }
 
+/* ---- Left Side: Event Hero Banner ---- */
+.auth-hero-side {
+  flex: 0 0 45%;
+  position: relative;
+  background: linear-gradient(135deg, #312E81 0%, #4F46E5 50%, #7C3AED 100%);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 32px;
+}
+
+.hero-bg-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
+.hero-overlay-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.45) 0%, transparent 60%);
+  z-index: 2;
+}
+
+/* Floating Card at Bottom of Hero */
+.hero-floating-card {
+  position: relative;
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.hero-floating-card h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.hero-floating-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #4B5563;
+  line-height: 1.5;
+}
+
+/* ---- Right Side: Form & Tabs ---- */
+.auth-form-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px 64px;
+  background: var(--color-bg, #F9FAFB);
+}
+
+/* Sub-Nav Tabs */
+.auth-tabs {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--color-border, #E5E7EB);
+  width: 100%;
+  max-width: 440px;
+}
+
+.auth-tab {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-muted, #6B7280);
+  text-decoration: none;
+  padding-bottom: 10px;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.auth-tab:hover {
+  color: var(--color-primary, #4F46E5);
+}
+
+.auth-tab.active {
+  color: var(--color-primary, #4F46E5);
+  font-weight: 700;
+  border-bottom-color: var(--color-primary, #4F46E5);
+}
+
+/* Centered Elevated Card */
 .auth-card {
   width: 100%;
-  max-width: 400px;
-  background: var(--color-surface, #FFFFFF);
+  max-width: 440px;
+  background: #FFFFFF;
   border: 1px solid var(--color-border, #E5E7EB);
-  border-radius: var(--radius-lg, 12px);
-  padding: 36px;
-  box-shadow: var(--shadow-md, 0 1px 3px rgba(0, 0, 0, 0.06));
+  border-radius: 16px;
+  padding: 36px 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
-.auth-card h1 {
+.card-title {
   margin: 0 0 6px;
   font-size: 24px;
-  font-weight: 700;
-  color: var(--color-text, #111827);
+  font-weight: 800;
+  color: #111827;
+  text-align: center;
 }
 
-.auth-subtitle {
+.card-subtitle {
   margin: 0 0 28px;
+  font-size: 14px;
   color: var(--color-text-muted, #6B7280);
-  font-size: 14px;
+  text-align: center;
 }
 
+/* Form Controls */
 .form-field {
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
-.form-field label {
+.field-label {
   display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #374151);
   margin-bottom: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text, #111827);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--color-text-muted, #6B7280);
 }
 
 .form-field input,
 .form-field select,
 .form-field textarea {
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 14px;
   border: 1px solid var(--color-border, #E5E7EB);
-  border-radius: var(--radius-sm, 6px);
+  border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  background: var(--color-surface, #FFFFFF);
+  background: #FFFFFF;
   color: var(--color-text, #111827);
   box-sizing: border-box;
 }
@@ -66,11 +176,6 @@
   outline: none;
   border-color: var(--color-primary, #4F46E5);
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-.optional {
-  font-weight: 400;
-  color: var(--color-text-muted, #6B7280);
 }
 
 .field-error,
@@ -85,16 +190,17 @@
   margin-bottom: 16px;
 }
 
+/* Submit Button */
 .submit-btn {
   width: 100%;
-  padding: 12px;
-  margin-top: 4px;
+  padding: 13px;
+  margin-top: 8px;
   background: var(--color-primary, #4F46E5);
   color: #FFFFFF;
   border: none;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: 8px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   font-family: inherit;
   transition: background 0.15s ease;
@@ -109,48 +215,50 @@
   cursor: not-allowed;
 }
 
-.auth-links {
+/* Card Footer */
+.auth-card-footer {
   margin-top: 24px;
   text-align: center;
   font-size: 14px;
   color: var(--color-text-muted, #6B7280);
 }
 
-.auth-links p {
-  margin: 6px 0;
+.auth-card-footer p {
+  margin: 0;
 }
 
-.auth-links a {
+.link-primary {
   color: var(--color-primary, #4F46E5);
+  font-weight: 700;
   text-decoration: none;
-  font-weight: 600;
 }
 
-.auth-links a:hover {
+.link-primary:hover {
   text-decoration: underline;
 }
 
-/* Confirmation state */
-.confirmation {
-  text-align: center;
-}
-
-.confirmation h1 {
-  margin-bottom: 12px;
-}
-
-.confirmation .auth-subtitle {
-  line-height: 1.6;
-}
-
-.confirmation-link {
-  display: inline-block;
-  margin-top: 8px;
-  text-decoration: none;
-}
-
-@media (max-width: 480px) {
-  .auth-card {
+/* ---- Responsive Breakpoints ---- */
+@media (max-width: 1024px) {
+  .auth-hero-side {
+    flex: 0 0 38%;
     padding: 24px;
+  }
+
+  .hero-floating-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .auth-hero-side {
+    display: none;
+  }
+
+  .auth-form-side {
+    padding: 32px 16px 48px;
+  }
+
+  .auth-card {
+    padding: 28px 20px;
   }
 }

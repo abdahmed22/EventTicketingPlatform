@@ -1,77 +1,104 @@
 <div class="auth-page">
-  <div class="auth-card">
-    <h1>Create Your Account</h1>
-    <p class="auth-subtitle">Sign up to browse and book events.</p>
+  <!-- Left Side: Large Vertical Event Hero Banner -->
+  <div class="auth-hero-side">
+    <img
+      src="/images/auth/login-event.jpg"
+      alt="Eventix Registration Experience"
+      class="hero-bg-img"
+      (error)="onImageError($event)"
+    />
+    <div class="hero-overlay-gradient"></div>
 
-    @if (registerForm().invalid() && registerForm().errors().length) {
-      @for (error of registerForm().errors(); track error) {
-        <p class="form-error">{{ error.message }}</p>
+    <div class="hero-floating-card">
+      <h2>Seamless Event Management</h2>
+      <p>Join thousands of professionals organizing and attending premium experiences worldwide.</p>
+    </div>
+  </div>
+
+  <!-- Right Side: Register Form & Navigation -->
+  <div class="auth-form-side">
+    <!-- Top Sub-Nav Tabs -->
+    <div class="auth-tabs">
+      <a routerLink="/login" class="auth-tab">Login</a>
+      <a routerLink="/register" class="auth-tab active">Register</a>
+      <a routerLink="/register/organizer" class="auth-tab">Organizer App</a>
+    </div>
+
+    <!-- Centered Register Card -->
+    <div class="auth-card">
+      <h1 class="card-title">Create Your Account</h1>
+      <p class="card-subtitle">Sign up to browse and book events.</p>
+
+      @if (registerForm().invalid() && registerForm().errors().length) {
+        @for (error of registerForm().errors(); track error) {
+          <p class="form-error">{{ error.message }}</p>
+        }
       }
-    }
 
-    <form [formRoot]="registerForm">
-      <div class="form-field">
-        <label for="name">Full name</label>
-        <input id="name" type="text" autocomplete="name" [formField]="registerForm.name" />
-        @if (registerForm.name().touched() && registerForm.name().invalid()) {
-          @for (error of registerForm.name().errors(); track error) {
-            <div class="field-error">{{ error.message }}</div>
+      <form [formRoot]="registerForm">
+        <div class="form-field">
+          <label for="name" class="field-label">FULL NAME</label>
+          <input id="name" type="text" autocomplete="name" placeholder="John Doe" [formField]="registerForm.name" />
+          @if (registerForm.name().touched() && registerForm.name().invalid()) {
+            @for (error of registerForm.name().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
           }
-        }
-      </div>
+        </div>
 
-      <div class="form-field">
-        <label for="email">Email</label>
-        <input id="email" type="email" autocomplete="email" [formField]="registerForm.email" />
-        @if (registerForm.email().touched() && registerForm.email().invalid()) {
-          @for (error of registerForm.email().errors(); track error) {
-            <div class="field-error">{{ error.message }}</div>
+        <div class="form-field">
+          <label for="email" class="field-label">EMAIL</label>
+          <input id="email" type="email" autocomplete="email" placeholder="name@company.com" [formField]="registerForm.email" />
+          @if (registerForm.email().touched() && registerForm.email().invalid()) {
+            @for (error of registerForm.email().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
           }
-        }
-      </div>
+        </div>
 
-      <div class="form-field">
-        <label for="phone">Phone <span class="optional">(optional)</span></label>
-        <input id="phone" type="tel" autocomplete="tel" [formField]="registerForm.phone" />
-      </div>
+        <div class="form-field">
+          <label for="phone" class="field-label">PHONE <span class="optional">(optional)</span></label>
+          <input id="phone" type="tel" autocomplete="tel" placeholder="+1 (555) 000-0000" [formField]="registerForm.phone" />
+        </div>
 
-      <div class="form-field">
-        <label for="password">Password</label>
-        <input id="password" type="password" autocomplete="new-password" [formField]="registerForm.password" />
-        @if (registerForm.password().touched() && registerForm.password().invalid()) {
-          @for (error of registerForm.password().errors(); track error) {
-            <div class="field-error">{{ error.message }}</div>
+        <div class="form-field">
+          <label for="password" class="field-label">PASSWORD</label>
+          <input id="password" type="password" autocomplete="new-password" placeholder="••••••••" [formField]="registerForm.password" />
+          @if (registerForm.password().touched() && registerForm.password().invalid()) {
+            @for (error of registerForm.password().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
           }
-        }
-      </div>
+        </div>
 
-      <div class="form-field">
-        <label for="confirmPassword">Confirm password</label>
-        <input
-          id="confirmPassword"
-          type="password"
-          autocomplete="new-password"
-          [formField]="registerForm.confirmPassword"
-        />
-        @if (registerForm.confirmPassword().touched() && registerForm.confirmPassword().invalid()) {
-          @for (error of registerForm.confirmPassword().errors(); track error) {
-            <div class="field-error">{{ error.message }}</div>
+        <div class="form-field">
+          <label for="confirmPassword" class="field-label">CONFIRM PASSWORD</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            placeholder="••••••••"
+            [formField]="registerForm.confirmPassword"
+          />
+          @if (registerForm.confirmPassword().touched() && registerForm.confirmPassword().invalid()) {
+            @for (error of registerForm.confirmPassword().errors(); track error) {
+              <div class="field-error">{{ error.message }}</div>
+            }
           }
-        }
+        </div>
+
+        <button class="submit-btn" type="submit" [disabled]="registerForm().submitting()">
+          @if (registerForm().submitting()) {
+            Creating account...
+          } @else {
+            Sign Up →
+          }
+        </button>
+      </form>
+
+      <div class="auth-card-footer">
+        <p>Already have an account? <a routerLink="/login" class="link-primary">Log in</a></p>
       </div>
-
-      <button class="submit-btn" type="submit" [disabled]="registerForm().submitting()">
-        @if (registerForm().submitting()) {
-          Creating account...
-        } @else {
-          Sign Up
-        }
-      </button>
-    </form>
-
-    <div class="auth-links">
-      <p>Already have an account? <a routerLink="/login">Log in</a></p>
-      <p>Want to host events instead? <a routerLink="/register/organizer">Apply to become an organizer</a></p>
     </div>
   </div>
 </div>
