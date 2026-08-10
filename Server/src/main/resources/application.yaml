@@ -17,7 +17,7 @@ security:
     expiration-ms: 86400000
 app:
   cors:
-    allowed-origins: http://localhost:4200
+    allowed-origins: http://localhost:4200,http://192.168.49.2:30000
 admin:
   seed:
     email: ${ADMIN_EMAIL:admin@example.com}
