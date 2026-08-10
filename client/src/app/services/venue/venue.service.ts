@@ -19,6 +19,11 @@ export class VenueService {
     return this.http.post<VenueResponse>(`${this.apiUrl}/organizer/venues`, request);
   }
 
+  // Organizer: Update venue request
+  organizerUpdate(id: string, request: VenueCreateRequest): Observable<VenueResponse> {
+    return this.http.put<VenueResponse>(`${this.apiUrl}/organizer/venues/${id}`, request);
+  }
+
   // Organizer: List own venues
   listMyVenues(status?: VenueStatus): Observable<VenueResponse[]> {
     let params = new HttpParams();

@@ -42,5 +42,18 @@ export class BookingService {
       `${this.apiUrl}/my`
     );
   }
-}
 
+  /** Organizer: get all bookings for a specific event they own */
+  getEventBookings(eventId: string) {
+    return this.http.get<BookingResponse[]>(
+      `${environment.apiUrl}/organizer/events/${eventId}/bookings`
+    );
+  }
+
+  /** Admin: get all bookings across all events */
+  getAdminAllBookings() {
+    return this.http.get<BookingResponse[]>(
+      `${environment.apiUrl}/admin/bookings`
+    );
+  }
+}

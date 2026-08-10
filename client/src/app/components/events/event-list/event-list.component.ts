@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EventService } from '../../../services/event/event.service';
@@ -33,6 +33,7 @@ export class EventListComponent {
   readonly pageSize = signal(9);
   readonly totalPages = signal(0);
   readonly totalElements = signal(0);
+  readonly pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i));
 
   // Filter signals
   readonly selectedCategory = signal<CategoryOption>('ALL');

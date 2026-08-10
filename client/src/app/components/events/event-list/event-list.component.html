@@ -174,14 +174,14 @@
               ‹
             </button>
 
-            @for (p of [].constructor(totalPages()); track $index) {
+            @for (p of pagesArray(); track p) {
               <button
                 type="button"
                 class="btn-page"
-                [class.active]="$index === currentPage()"
-                (click)="changePage($index)"
+                [class.active]="p === currentPage()"
+                (click)="changePage(p)"
               >
-                {{ $index + 1 }}
+                {{ p + 1 }}
               </button>
             }
 
