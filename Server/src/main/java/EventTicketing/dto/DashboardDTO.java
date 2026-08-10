@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+public abstract class DashboardDTO {
+
 public class DashboardDTO {
 
     public record PendingOrganizerApplication(
@@ -13,7 +15,8 @@ public class DashboardDTO {
             String phone,
             String organizationName,
             String reason,
-            Instant submittedAt
+            Instant submittedAt,
+            Instant submittedAt,
     ) {}
 
     public record PendingVenue(
@@ -21,6 +24,15 @@ public class DashboardDTO {
             String name,
             String address,
             Integer capacity,
+            UUID submittedById,
+            String submittedByName) {
+    }
+
+    public record Summary(
+            int pendingOrganizerApplications,
+            List<PendingOrganizerApplication> organizerApplications,
+            int pendingVenueRequests,
+            List<PendingVenue> venueRequests) {
             UUID requestedById,
             String requestedByName
     ) {}

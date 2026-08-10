@@ -1,0 +1,118 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <h1>All Tickets</h1>
+      <p class="subtitle">Inspect tickets across the system by event, or look one up by its ID.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+  @if (success()) {
+    <div class="banner banner-success">{{ success() }}</div>
+  }
+
+  <!-- Lookup by UUID -->
+  <section class="lookup card">
+    <h2 class="section-title">Look up a ticket by ID</h2>
+    <div class="lookup-row">
+      <input
+        type="text"
+        class="lookup-input"
+        placeholder="Ticket UUID"
+        [value]="lookupUuid()"
+        (input)="lookupUuid.set($any($event.target).value)"
+      />
+      <button type="button" class="btn btn-primary" [disabled]="lookingUp()" (click)="runLookup()">
+        {{ lookingUp() ? 'Searching...' : 'Search' }}
+      </button>
+    </div>
+    @if (lookupError()) {
+      <p class="lookup-error">{{ lookupError() }}</p>
+    }
+    @if (lookupTicket(); as t) {
+      <div class="ticket-mini">
+        <div>
+          <span class="mini-label">Code</span>
+          <span class="mini-value mono">{{ t.ticketCode }}</span>
+        </div>
+        <div>
+          <span class="mini-label">Status</span>
+          <span class="status-badge" [class]="'status-' + t.status.toLowerCase()">{{ ticketStatusLabel(t.status) }}</span>
+        </div>
+        <div>
+          <span class="mini-label">Total</span>
+          <span class="mini-value">{{ t.totalPrice | currency }}</span>
+        </div>
+        <div>
+          <span class="mini-label">Owner</span>
+          <span class="mini-value mono small">{{ t.userOwnerUUID }}</span>
+        </div>
+        @if (t.status !== 'CANCELLED') {
+          <button type="button" class="btn btn-danger" (click)="cancelTicket(t)">Void</button>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Browse by event -->
+  @if (loadingEvents()) {
+    <div class="loading-box">Loading events...</div>
+  } @else if (events().length === 0) {
+    <div class="empty-state">There are no events in the system yet.</div>
+  } @else {
+    <section class="browse">
+      <div class="event-picker">
+        <label for="ticket-event-select" class="picker-label">Event</label>
+        <select id="ticket-event-select" class="picker-select" [value]="selectedEventId()" (change)="selectEvent($any($event.target).value)">
+          @for (event of events(); track event.id) {
+            <option [value]="event.id">{{ event.title }} ({{ event.status }})</option>
+          }
+        </select>
+      </div>
+
+      @if (loadingTickets()) {
+        <div class="loading-box">Loading tickets...</div>
+      } @else if (tickets().length === 0) {
+        <div class="empty-state">No tickets issued for this event.</div>
+      } @else {
+        <div class="table card">
+          <div class="row head">
+            <span>Ticket Code</span>
+            <span>Seat Category</span>
+            <span>Owner</span>
+            <span>Total</span>
+            <span>Status</span>
+            <span>Action</span>
+          </div>
+          @for (ticket of tickets(); track ticket.uuid) {
+            <div class="row">
+              <span class="cell mono" [title]="ticket.ticketCode">{{ ticket.ticketCode }}</span>
+              <span class="cell">{{ seatCategoryName(ticket) }}</span>
+              <span class="cell mono small" [title]="ticket.userOwnerUUID">{{ ticket.userOwnerUUID }}</span>
+              <span class="cell">{{ ticket.totalPrice | currency }}</span>
+              <span class="cell">
+                <span class="status-badge" [class]="'status-' + ticket.status.toLowerCase()">{{ ticketStatusLabel(ticket.status) }}</span>
+              </span>
+              <span class="cell">
+                @if (ticket.status !== 'CANCELLED') {
+                  <button
+                    type="button"
+                    class="btn btn-danger sm"
+                    [disabled]="actioningId() === ticket.uuid"
+                    (click)="cancelTicket(ticket)"
+                  >
+                    {{ actioningId() === ticket.uuid ? '...' : 'Void' }}
+                  </button>
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

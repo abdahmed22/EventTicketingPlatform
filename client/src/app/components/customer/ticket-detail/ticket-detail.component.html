@@ -1,0 +1,71 @@
+<div class="page-container">
+  <a routerLink="/customer/tickets" class="back-link">← Back to My Tickets</a>
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-box">Loading ticket...</div>
+  } @else { @if (ticket(); as t) {
+    <article class="ticket">
+      <header class="ticket-header">
+        <div>
+          <span class="eyebrow">Ticket</span>
+          <h1 class="ticket-code-display">{{ t.ticketCode }}</h1>
+        </div>
+        <span class="status-badge" [class]="'status-' + t.status.toLowerCase()">
+          {{ ticketStatusLabel(t.status) }}
+        </span>
+      </header>
+
+      <section class="section">
+        <h2 class="section-title">Event Information</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Event</span><span class="value">{{ event()?.title ?? booking()?.eventName ?? '—' }}</span></div>
+          @if (event(); as e) {
+            <div class="field"><span class="label">Date</span><span class="value">{{ e.eventDate | date: 'fullDate' }} at {{ e.eventTime }}</span></div>
+            <div class="field"><span class="label">Category</span><span class="value">{{ e.category }}</span></div>
+          }
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Venue Information</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Venue</span><span class="value">{{ event()?.venue?.name ?? '—' }}</span></div>
+          <div class="field"><span class="label">Address</span><span class="value">{{ event()?.venue?.address ?? '—' }}</span></div>
+          <div class="field"><span class="label">Capacity</span><span class="value">{{ event()?.venue?.capacity ?? '—' }}</span></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Seat Category</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Category</span><span class="value">{{ seatCategoryName() }}</span></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Booking Information</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Booking ID</span><span class="value mono">{{ t.bookingId }}</span></div>
+          @if (booking(); as b) {
+            <div class="field"><span class="label">Quantity</span><span class="value">{{ b.quantity }}</span></div>
+            <div class="field"><span class="label">Booking Status</span><span class="value">{{ b.status }}</span></div>
+            <div class="field"><span class="label">Booked On</span><span class="value">{{ b.createdAt | date: 'medium' }}</span></div>
+          }
+        </div>
+      </section>
+
+      <section class="section">
+        <h2 class="section-title">Payment</h2>
+        <div class="grid">
+          <div class="field"><span class="label">Total Price</span><span class="value">{{ t.totalPrice | currency }}</span></div>
+          <div class="field"><span class="label">Issued At</span><span class="value">{{ t.createdAt | date: 'medium' }}</span></div>
+        </div>
+      </section>
+    </article>
+  }
+  }
+</div>

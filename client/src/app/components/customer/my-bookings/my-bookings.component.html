@@ -1,0 +1,43 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <h1>My Bookings</h1>
+      <p class="subtitle">Your reservation history. Open a booking to view its tickets.</p>
+    </div>
+    <a routerLink="/customer/tickets" class="btn btn-secondary">View My Tickets</a>
+  </header>
+
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-box">Loading bookings...</div>
+  } @else if (bookings().length === 0) {
+    <div class="empty-state">
+      <p>You have no bookings yet.</p>
+      <a routerLink="/" class="btn btn-primary">Browse Events</a>
+    </div>
+  } @else {
+    <div class="booking-list">
+      @for (booking of bookings(); track booking.id) {
+        <a [routerLink]="['/customer/bookings', booking.id]" class="booking-card">
+          <div class="booking-main">
+            <div class="title-row">
+              <h2>{{ booking.eventName }}</h2>
+              <span class="status-badge" [class]="'booking-' + booking.status.toLowerCase()">
+                {{ booking.status }}
+              </span>
+            </div>
+            <p class="booking-meta">{{ booking.seatCategoryName }} · {{ booking.quantity }} seat(s)</p>
+            <p class="booking-date">Booked {{ booking.createdAt | date: 'medium' }}</p>
+          </div>
+          <div class="booking-side">
+            <span class="price">{{ booking.totalPrice | currency }}</span>
+            <span class="view-link">View →</span>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</div>
