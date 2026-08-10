@@ -1,17 +1,15 @@
-export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED';
+export type BookingStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'CANCELLED'
+  | 'EXPIRED';
 
-export interface BookingCreateRequest {
+export interface CreateBookingRequest {
   eventId: string;
   seatCategoryId: string;
   quantity: number;
 }
 
-/**
- * GET /api/bookings/my (and the reserve/confirm/cancel responses).
- *
- * Unlike the ticket payloads, this DTO already carries the resolved event name
- * and seat category name, so it is used to enrich the customer ticket views.
- */
 export interface BookingResponse {
   id: string;
   eventId: string;
@@ -23,4 +21,6 @@ export interface BookingResponse {
   status: BookingStatus;
   createdAt: string;
   expiresAt: string;
+  confirmedAt: string | null;
+  cancelledAt: string | null;
 }

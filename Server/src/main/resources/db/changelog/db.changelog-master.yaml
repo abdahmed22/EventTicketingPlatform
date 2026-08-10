@@ -17,9 +17,6 @@ databaseChangeLog:
 
   - include:
       file: db/changelog/changes/006-create-booking-table.yaml
-      
-  - include:
-      file: db/changelog/changes/007-create-ticket-table.yaml
 
   - include:
-      file: db/changelog/changes/008-create-ticket-attendee-table.yaml
+      file: db/changelog/changes/007-add-booking-indexes.yaml

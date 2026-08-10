@@ -50,7 +50,8 @@ public class SecurityConfig {
                 "/api/register",
                 "/api/register/**",
                 "/api/login",
-                "/api/organizer-application")
+                "/api/organizer-application",
+                "/actuator/health/**")
             .permitAll()
             .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
             .requestMatchers("/error").permitAll()

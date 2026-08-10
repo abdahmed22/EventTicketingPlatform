@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, CurrencyPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { EventService } from '../../../services/event/event.service';
@@ -6,6 +6,7 @@ import { VenueService } from '../../../services/venue/venue.service';
 import { EventCategory, EventFilterParams, EventSummary } from '../../../models/event.model';
 import { VenueResponse } from '../../../models/venue.model';
 import { ApiError } from '../../../models/api-error.model';
+import { getEventCategoryImage } from '../../../utils/event-image.util';
 
 type CategoryOption = EventCategory | 'ALL';
 
@@ -32,6 +33,7 @@ export class EventListComponent {
   readonly pageSize = signal(9);
   readonly totalPages = signal(0);
   readonly totalElements = signal(0);
+  readonly pagesArray = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i));
 
   // Filter signals
   readonly selectedCategory = signal<CategoryOption>('ALL');
@@ -114,5 +116,16 @@ export class EventListComponent {
   getVenueName(venueId: string): string {
     const v = this.venues().find((item) => item.id === venueId);
     return v ? `${v.name} (${v.address})` : 'Venue details in event view';
+  }
+
+  getCategoryImage(category: EventCategory): string {
+    return getEventCategoryImage(category);
+  }
+
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.style.display = 'none';
+    }
   }
 }

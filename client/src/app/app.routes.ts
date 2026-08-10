@@ -34,6 +34,14 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'bookings',
+    canActivate: [customerGuard],
+    loadComponent: () =>
+      import('./components/booking/my-bookings/my-bookings.component').then(
+        (m) => m.MyBookingsComponent
+      )
+  },
+  {
     path: 'organizer/events',
     canActivate: [organizerGuard],
     loadComponent: () =>

@@ -1,16 +1,21 @@
 <header class="navbar">
   <div class="nav-container">
     <a routerLink="/" class="nav-brand">
-      <span class="brand-icon">🎟️</span>
       <span class="brand-name">Eventix</span>
     </a>
 
     <nav class="nav-links">
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-item">
-        Browse Events
+        Browse
       </a>
 
-      @if (authService.isOrganizer() || authService.isAdmin()) {
+      @if (authService.isCustomer()) {
+        <a routerLink="/bookings" routerLinkActive="active" class="nav-item">
+          My Bookings
+        </a>
+      }
+
+      @if (authService.isOrganizer()) {
         <a routerLink="/organizer/events" routerLinkActive="active" class="nav-item">
           My Events
         </a>
@@ -21,7 +26,7 @@
 
       @if (authService.isAdmin()) {
         <a routerLink="/admin/organizer-applications" routerLinkActive="active" class="nav-item">
-          Organizer Apps
+          Admin
         </a>
         <a routerLink="/admin/venues" routerLinkActive="active" class="nav-item">
           Venue Requests
@@ -39,10 +44,40 @@
         </div>
         <button type="button" class="btn-logout" (click)="logout()">Log Out</button>
       } @else {
-        <a routerLink="/login" class="nav-link-btn">Log In</a>
-        <a routerLink="/register" class="btn-primary">Sign Up</a>
-        <a routerLink="/register/organizer" class="nav-link-secondary">Host Events</a>
+        <a routerLink="/login" class="btn-login">Login</a>
+        <a routerLink="/register" class="btn-register">Register</a>
       }
+
+      <button type="button" class="mobile-menu-btn" (click)="toggleMobileMenu()">
+        <span class="menu-icon">☰</span>
+      </button>
     </div>
   </div>
+
+  <!-- Mobile Menu -->
+  @if (mobileMenuOpen()) {
+    <div class="mobile-nav">
+      <a routerLink="/" (click)="closeMobileMenu()" class="mobile-nav-item">Browse</a>
+
+      @if (authService.isCustomer()) {
+        <a routerLink="/bookings" (click)="closeMobileMenu()" class="mobile-nav-item">My Bookings</a>
+      }
+
+      @if (authService.isOrganizer()) {
+        <a routerLink="/organizer/events" (click)="closeMobileMenu()" class="mobile-nav-item">My Events</a>
+        <a routerLink="/organizer/venues" (click)="closeMobileMenu()" class="mobile-nav-item">My Venues</a>
+      }
+
+      @if (authService.isAdmin()) {
+        <a routerLink="/admin/organizer-applications" (click)="closeMobileMenu()" class="mobile-nav-item">Admin</a>
+        <a routerLink="/admin/venues" (click)="closeMobileMenu()" class="mobile-nav-item">Venue Requests</a>
+      }
+
+      @if (!authService.isLoggedIn()) {
+        <a routerLink="/login" (click)="closeMobileMenu()" class="mobile-nav-item">Login</a>
+        <a routerLink="/register" (click)="closeMobileMenu()" class="mobile-nav-item">Register</a>
+        <a routerLink="/register/organizer" (click)="closeMobileMenu()" class="mobile-nav-item">Host Events</a>
+      }
+    </div>
+  }
 </header>

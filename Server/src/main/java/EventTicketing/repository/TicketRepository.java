@@ -63,7 +63,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
                       @Param("status") TicketStatus status);
 
     @Modifying
-    @Query("UPDATE Ticket t SET t.status = :status WHERE t.bookingId = :bookingId AND t.status == :status")
+    @Query("UPDATE Ticket t SET t.status = :status WHERE t.bookingId = :bookingId AND t.status = :status")
     Integer updateStatusByBookingId(@Param("bookingId") UUID bookingId,
                                 @Param("status") TicketStatus status);
 

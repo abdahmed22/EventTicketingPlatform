@@ -1,9 +1,10 @@
 <div class="browse-page">
+  <!-- Hero Section -->
   <header class="browse-header">
-    <div class="header-badge">Live Events</div>
-    <h1>Discover & Book Upcoming Events</h1>
+    <h1>Find Your Next Experience</h1>
     <p class="browse-subtitle">
-      Explore live music, sports, conferences, theatre performances, and more.
+      Discover the best events happening near you. From underground concerts to massive tech
+      conferences, secure your spot today.
     </p>
   </header>
 
@@ -21,9 +22,15 @@
     }
   </div>
 
-  <!-- Filter Card -->
-  <div class="filter-card">
-    <div class="filter-grid">
+  <!-- Layout: Sidebar Filters + Event Cards -->
+  <div class="browse-layout">
+    <!-- Sidebar Filters -->
+    <aside class="filter-sidebar">
+      <div class="filter-sidebar-header">
+        <span class="filter-icon">☰</span>
+        <h3>Filters</h3>
+      </div>
+
       <div class="filter-group">
         <label for="venueSelect">Venue</label>
         <select
@@ -59,123 +66,136 @@
       </div>
 
       <div class="filter-group">
-        <label for="minPrice">Min Price ($)</label>
-        <input
-          id="minPrice"
-          type="number"
-          min="0"
-          placeholder="0"
-          [value]="minPrice() ?? ''"
-          (input)="minPrice.set($any($event.target).value ? +$any($event.target).value : null)"
-        />
+        <label>Price Range</label>
+        <div class="price-range-row">
+          <input
+            id="minPrice"
+            type="number"
+            min="0"
+            placeholder="Min"
+            [value]="minPrice() ?? ''"
+            (input)="minPrice.set($any($event.target).value ? +$any($event.target).value : null)"
+          />
+          <span class="range-sep">–</span>
+          <input
+            id="maxPrice"
+            type="number"
+            min="0"
+            placeholder="Max"
+            [value]="maxPrice() ?? ''"
+            (input)="maxPrice.set($any($event.target).value ? +$any($event.target).value : null)"
+          />
+        </div>
       </div>
 
-      <div class="filter-group">
-        <label for="maxPrice">Max Price ($)</label>
-        <input
-          id="maxPrice"
-          type="number"
-          min="0"
-          placeholder="Any"
-          [value]="maxPrice() ?? ''"
-          (input)="maxPrice.set($any($event.target).value ? +$any($event.target).value : null)"
-        />
+      <div class="filter-actions">
+        <button type="button" class="btn btn-primary" (click)="applyFilters()">
+          Apply Filters
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="resetFilters()">
+          Clear
+        </button>
       </div>
-    </div>
+    </aside>
 
-    <div class="filter-actions">
-      <button type="button" class="btn btn-primary" (click)="applyFilters()">
-        Filter Results
-      </button>
-      <button type="button" class="btn btn-ghost" (click)="resetFilters()">
-        Clear Filters
-      </button>
+    <!-- Main Content -->
+    <div class="browse-main">
+      @if (error()) {
+        <div class="banner banner-error">{{ error() }}</div>
+      }
+
+      @if (loading()) {
+        <div class="events-grid">
+          @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+            <div class="skeleton-card">
+              <div class="skeleton-image"></div>
+              <div class="skeleton-body">
+                <div class="skeleton-title"></div>
+                <div class="skeleton-text"></div>
+                <div class="skeleton-button"></div>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (events().length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">📅</div>
+          <h3>No events found</h3>
+          <p>Try adjusting your search filters or check back later for new event listings.</p>
+          <button type="button" class="btn btn-ghost" (click)="resetFilters()">Reset Filters</button>
+        </div>
+      } @else {
+        <div class="events-grid">
+          @for (event of events(); track event.id) {
+            <div class="event-card">
+              <div class="card-image-area">
+                <img
+                  [src]="getCategoryImage(event.category)"
+                  [alt]="event.title"
+                  class="card-category-img"
+                  (error)="onImageError($event)"
+                />
+                <span class="category-badge">{{ event.category }}</span>
+              </div>
+
+              <div class="card-body">
+                <h2 class="event-title">{{ event.title }}</h2>
+
+                <div class="event-meta">
+                  <div class="meta-row">
+                    <span class="meta-icon">📅</span>
+                    <span>{{ event.eventDate | date: 'mediumDate' }}</span>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-icon">📍</span>
+                    <span>{{ getVenueName(event.venueId) }}</span>
+                  </div>
+                </div>
+
+                <div class="card-footer">
+                  <a [routerLink]="['/events', event.id]" class="btn btn-view-details">
+                    View Details
+                  </a>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages() > 1) {
+          <div class="pagination">
+            <button
+              type="button"
+              class="btn-page"
+              [disabled]="currentPage() === 0"
+              (click)="changePage(currentPage() - 1)"
+            >
+              ‹
+            </button>
+
+            @for (p of pagesArray(); track p) {
+              <button
+                type="button"
+                class="btn-page"
+                [class.active]="p === currentPage()"
+                (click)="changePage(p)"
+              >
+                {{ p + 1 }}
+              </button>
+            }
+
+            <button
+              type="button"
+              class="btn-page"
+              [disabled]="currentPage() >= totalPages() - 1"
+              (click)="changePage(currentPage() + 1)"
+            >
+              ›
+            </button>
+          </div>
+        }
+      }
     </div>
   </div>
-
-  @if (error()) {
-    <div class="banner banner-error">{{ error() }}</div>
-  }
-
-  @if (loading()) {
-    <div class="loading-grid">
-      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
-        <div class="skeleton-card">
-          <div class="skeleton-pill"></div>
-          <div class="skeleton-title"></div>
-          <div class="skeleton-text"></div>
-          <div class="skeleton-button"></div>
-        </div>
-      }
-    </div>
-  } @else if (events().length === 0) {
-    <div class="empty-state">
-      <div class="empty-icon">📅</div>
-      <h3>No events found</h3>
-      <p>Try adjusting your search filters or check back later for new event listings.</p>
-      <button type="button" class="btn btn-ghost" (click)="resetFilters()">Reset Filters</button>
-    </div>
-  } @else {
-    <div class="events-grid">
-      @for (event of events(); track event.id) {
-        <div class="event-card">
-          <div class="card-header">
-            <span class="category-badge">{{ event.category }}</span>
-            <span class="status-badge">PUBLISHED</span>
-          </div>
-
-          <h2 class="event-title">{{ event.title }}</h2>
-
-          @if (event.description) {
-            <p class="event-description">{{ event.description }}</p>
-          }
-
-          <div class="event-meta">
-            <div class="meta-row">
-              <span class="meta-icon">📅</span>
-              <span>{{ event.eventDate | date: 'fullDate' }} at {{ event.eventTime }}</span>
-            </div>
-            <div class="meta-row">
-              <span class="meta-icon">📍</span>
-              <span>{{ getVenueName(event.venueId) }}</span>
-            </div>
-          </div>
-
-          <div class="card-footer">
-            <a [routerLink]="['/events', event.id]" class="btn btn-card-action">
-              View Event & Tickets →
-            </a>
-          </div>
-        </div>
-      }
-    </div>
-
-    <!-- Pagination -->
-    @if (totalPages() > 1) {
-      <div class="pagination">
-        <button
-          type="button"
-          class="btn-page"
-          [disabled]="currentPage() === 0"
-          (click)="changePage(currentPage() - 1)"
-        >
-          ← Previous
-        </button>
-
-        <span class="page-info">
-          Page <strong>{{ currentPage() + 1 }}</strong> of <strong>{{ totalPages() }}</strong>
-          ({{ totalElements() }} total events)
-        </span>
-
-        <button
-          type="button"
-          class="btn-page"
-          [disabled]="currentPage() >= totalPages() - 1"
-          (click)="changePage(currentPage() + 1)"
-        >
-          Next →
-        </button>
-      </div>
-    }
-  }
 </div>
