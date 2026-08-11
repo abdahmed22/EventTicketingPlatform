@@ -213,7 +213,7 @@
                 <button
                   type="button"
                   class="qty-btn"
-                  [disabled]="!selectedCategory() || selectedCategory()!.availableSeats <= 0 || quantity() >= selectedCategory()!.availableSeats"
+                  [disabled]="!selectedCategory() || selectedCategory()!.availableSeats <= 0 || quantity() >= getMaxQuantity(selectedCategory())"
                   (click)="onQuantityChange(quantity() + 1)"
                 >
                   +
@@ -229,6 +229,9 @@
                   ⚠️ Only {{ category.availableSeats }} seats left!
                 } @else {
                   ❌ Sold Out
+                }
+                @if (category.seatingCapacity && category.seatingCapacity > 0) {
+                  <span style="display: block; margin-top: 4px; font-weight: 600;">(Limit: max {{ category.seatingCapacity }} per person)</span>
                 }
               </div>
             }
@@ -249,7 +252,8 @@
                 selectedCategory()!.availableSeats <= 0 ||
                 quantity() < 1 ||
                 !Number.isInteger(quantity()) ||
-                quantity() > selectedCategory()!.availableSeats
+                quantity() > selectedCategory()!.availableSeats ||
+                (selectedCategory()!.seatingCapacity > 0 && quantity() > selectedCategory()!.seatingCapacity)
               "
               (click)="reserve()"
             >

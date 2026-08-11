@@ -95,6 +95,23 @@ public class BookingService {
           "Not enough seats available");
     }
 
+    // Check seat limit per person (seatingCapacity)
+    if (seatCategory.getSeatingCapacity() != null && seatCategory.getSeatingCapacity() > 0) {
+      if (request.quantity() > seatCategory.getSeatingCapacity()) {
+        throw new IllegalStateException(
+            "Requested quantity exceeds seat limit per person (" + seatCategory.getSeatingCapacity() + ")");
+      }
+      List<Booking> activeBookings = bookingRepository.findByUserIdAndSeatCategoryIdAndStatusIn(
+          user.getId(),
+          seatCategory.getId(),
+          List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED));
+      int alreadyBooked = activeBookings.stream().mapToInt(Booking::getQuantity).sum();
+      if (alreadyBooked + request.quantity() > seatCategory.getSeatingCapacity()) {
+        throw new IllegalStateException(
+            "Seat limit per person (" + seatCategory.getSeatingCapacity() + ") reached for this category");
+      }
+    }
+
     BigDecimal totalPrice = seatCategory.getPrice()
         .multiply(
             BigDecimal.valueOf(
@@ -232,6 +249,10 @@ public class BookingService {
         seatCategory,
         booking.getQuantity());
 
+    if (booking.getStatus() == BookingStatus.CONFIRMED) {
+      ticketService.voidTicketsForBooking(booking.getId());
+    }
+
     booking.setStatus(
         BookingStatus.CANCELLED);
 
@@ -308,9 +329,20 @@ public class BookingService {
         quantity);
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public List<BookingDto.Response> myBookings(
       User user) {
+
+    // Auto-expire any pending bookings whose reservation timer has expired
+    List<Booking> userBookings = bookingRepository.findByUserId(user.getId());
+    Instant now = Instant.now();
+    for (Booking booking : userBookings) {
+      if (booking.getStatus() == BookingStatus.PENDING
+          && booking.getExpiresAt() != null
+          && booking.getExpiresAt().isBefore(now)) {
+        expireBooking(booking.getId());
+      }
+    }
 
     return bookingRepository
         .findByUserId(user.getId())
@@ -365,6 +397,10 @@ public class BookingService {
             BookingStatus.EXPIRED);
 
       } else {
+
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+          ticketService.voidTicketsForBooking(booking.getId());
+        }
 
         booking.setStatus(
             BookingStatus.CANCELLED);

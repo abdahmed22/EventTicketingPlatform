@@ -39,7 +39,7 @@ public class VenueService {
 
     public List<VenueDto.Response> listMyVenues(User organizer, Venue.Status status) {
         List<Venue> venues = status != null
-                ? venueRepository.findByStatus(status)
+                ? venueRepository.findByRequestedByAndStatus(organizer, status)
                 : venueRepository.findByRequestedBy(organizer);
         return venues.stream()
                 .map(VenueDto.Response::from)

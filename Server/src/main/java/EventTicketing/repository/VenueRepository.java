@@ -17,4 +17,7 @@ public interface VenueRepository extends JpaRepository<Venue, UUID> {
     List<Venue> findByRequestedBy(User organizer);
 
     List<Venue> findByStatus(Venue.Status status);
+
+    List<Venue> findByRequestedByAndStatus(User organizer, Venue.Status status);
 }
+

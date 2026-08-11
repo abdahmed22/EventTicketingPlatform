@@ -16,18 +16,35 @@
   }
 
 
+  <div class="filter-bar">
+    @for (opt of filterOptions; track opt.value) {
+      <button
+        type="button"
+        class="filter-tab"
+        [class.active]="activeFilter() === opt.value"
+        (click)="setFilter(opt.value)"
+      >
+        {{ opt.label }}
+      </button>
+    }
+  </div>
+
   @if (!loading() && bookings().length === 0) {
     <div class="empty-state">
       <h2>No bookings yet</h2>
       <p>You don't have any bookings yet.</p>
     </div>
+  } @else if (!loading() && filteredBookings().length === 0) {
+    <div class="empty-state">
+      <h2>No bookings found</h2>
+      <p>There are no bookings matching the selected filter option.</p>
+    </div>
   }
 
-
-  @if (bookings().length > 0) {
+  @if (filteredBookings().length > 0) {
     <div class="bookings-grid">
 
-      @for (booking of bookings(); track booking.id) {
+      @for (booking of filteredBookings(); track booking.id) {
 
         <article
           class="booking-card"

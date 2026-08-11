@@ -82,16 +82,17 @@ class VenueServiceTest {
         Venue approvedVenue = Venue.builder()
                 .id(UUID.randomUUID())
                 .name("Shared Hall")
+                .requestedBy(organizer)
                 .status(Venue.Status.APPROVED)
                 .build();
 
-        when(venueRepository.findByStatus(Venue.Status.APPROVED)).thenReturn(List.of(approvedVenue));
+        when(venueRepository.findByRequestedByAndStatus(organizer, Venue.Status.APPROVED)).thenReturn(List.of(approvedVenue));
 
         List<VenueDto.Response> responses = venueService.listMyVenues(organizer, Venue.Status.APPROVED);
 
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).name()).isEqualTo("Shared Hall");
-        verify(venueRepository).findByStatus(Venue.Status.APPROVED);
+        verify(venueRepository).findByRequestedByAndStatus(organizer, Venue.Status.APPROVED);
     }
 
     @Test
