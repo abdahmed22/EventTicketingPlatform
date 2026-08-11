@@ -25,6 +25,8 @@
       }
 
       @if (authService.isAdmin()) {
+        <a routerLink="/organizer/events" routerLinkActive="active" class="nav-item">All Events</a>
+        <a routerLink="/organizer/venues" routerLinkActive="active" class="nav-item">All Venues</a>
         <a routerLink="/admin/organizer-applications" routerLinkActive="active" class="nav-item">
           Organizer Requests
         </a>

@@ -136,4 +136,19 @@ public class VenueService {
         venue.setReviewedBy(admin);
         return VenueDto.Response.from(venueRepository.save(venue));
     }
+
+    @Transactional
+    public VenueDto.Response adminCreate(User admin, VenueDto.CreateRequest request) {
+        ensureAdmin(admin);
+        Venue venue = Venue.builder()
+                .name(request.name())
+                .address(request.address())
+                .capacity(request.capacity())
+                .requestedBy(admin)
+                .status(Venue.Status.APPROVED)
+                .reviewedBy(admin)
+                .reviewedAt(LocalDateTime.now())
+                .build();
+        return VenueDto.Response.from(venueRepository.save(venue));
+    }
 }

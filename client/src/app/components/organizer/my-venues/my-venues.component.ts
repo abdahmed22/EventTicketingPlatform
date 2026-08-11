@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { form, FormField, FormRoot, min, required } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { VenueService } from '../../../services/venue/venue.service';
+import { AuthService } from '../../../services/auth/auth.service';
 import { VenueCreateRequest, VenueResponse, VenueStatus } from '../../../models/venue.model';
 import { ApiError } from '../../../models/api-error.model';
 
@@ -23,6 +24,7 @@ interface VenueFormValue {
 })
 export class MyVenuesComponent {
   private readonly venueService = inject(VenueService);
+  readonly authService = inject(AuthService);
 
   readonly statusOptions: StatusFilter[] = ['ALL', 'PENDING', 'APPROVED', 'REJECTED'];
 
@@ -60,10 +62,17 @@ export class MyVenuesComponent {
               address: val.address,
               capacity: val.capacity
             };
+            const isAdm = this.authService.isAdmin();
             const editId = this.editingVenueId();
             if (editId) {
-              await firstValueFrom(this.venueService.organizerUpdate(editId, req));
+              const update$ = isAdm
+                ? this.venueService.adminUpdate(editId, req)
+                : this.venueService.organizerUpdate(editId, req);
+              await firstValueFrom(update$);
               this.successMessage.set('Venue updated successfully!');
+            } else if (isAdm) {
+              await firstValueFrom(this.venueService.adminCreate(req));
+              this.successMessage.set('Venue created and approved.');
             } else {
               await firstValueFrom(this.venueService.submit(req));
               this.successMessage.set('Venue request submitted successfully! Pending admin approval.');
@@ -108,8 +117,11 @@ export class MyVenuesComponent {
     this.loading.set(true);
     this.error.set(null);
     const status = this.statusFilter() === 'ALL' ? undefined : (this.statusFilter() as VenueStatus);
+    const request$ = this.authService.isAdmin()
+      ? this.venueService.listAdminVenues(status)
+      : this.venueService.listMyVenues(status);
 
-    this.venueService.listMyVenues(status).subscribe({
+    request$.subscribe({
       next: (res) => {
         this.venues.set(res);
         this.loading.set(false);

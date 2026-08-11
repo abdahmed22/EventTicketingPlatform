@@ -78,4 +78,9 @@ public class VenueController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/admin/venues")
+    public ResponseEntity<VenueDto.Response> adminCreate(@AuthenticationPrincipal User admin,
+                                                        @Valid @RequestBody VenueDto.CreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(venueService.adminCreate(admin, request));
+    }
 }
