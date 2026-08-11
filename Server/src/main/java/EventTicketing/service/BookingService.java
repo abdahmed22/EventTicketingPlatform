@@ -239,9 +239,7 @@ public class BookingService {
         seatCategory,
         booking.getQuantity());
 
-    if (booking.getStatus() == BookingStatus.CONFIRMED) {
-      ticketService.voidTicketsForBooking(booking.getId());
-    }
+
 
     booking.setStatus(
         BookingStatus.CANCELLED);
@@ -393,9 +391,7 @@ public class BookingService {
 
       } else {
 
-        if (booking.getStatus() == BookingStatus.CONFIRMED) {
-          ticketService.voidTicketsForBooking(booking.getId());
-        }
+
 
         booking.setStatus(
             BookingStatus.CANCELLED);
