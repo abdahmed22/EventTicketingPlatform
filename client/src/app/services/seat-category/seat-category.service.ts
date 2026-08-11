@@ -23,12 +23,10 @@ import {
  *
  * Reading seat categories is done via EventService (they are embedded in EventResponse),
  * not through a dedicated endpoint, so there is no listByEvent here.
- *
- * Important: changing totalSeats via update() also changes availableSeats by the
- * same delta on the backend. Decreasing below booked count returns 409.
  */
 @Injectable({ providedIn: 'root' })
 export class SeatCategoryService {
+  //inject httpclient / requests
   private readonly http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
 

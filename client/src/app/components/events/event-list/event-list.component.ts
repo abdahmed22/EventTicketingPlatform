@@ -23,7 +23,7 @@ type CategoryOption = EventCategory | 'ALL';
  *
  * The landing page / public browse catalog. Shows all PUBLISHED events.
  *
- * Signals used (per SRS §9.1):
+ * Signals used ():
  *   - events, venues, loading, error            — raw data / UI state
  *   - currentPage, pageSize, totalPages, etc.  — pagination state
  *   - selectedCategory, selectedVenueId, etc.  — filter state

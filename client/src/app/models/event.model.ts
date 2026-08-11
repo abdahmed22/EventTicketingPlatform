@@ -1,7 +1,4 @@
-// ─── Person 2 Model: event.model.ts ───────────────────────────────────────────
-// Defines all TypeScript interfaces and types used across Event-related flows:
-// public browse, organizer create/edit/publish, and admin event management.
-// ──────────────────────────────────────────────────────────────────────────────
+
 import { VenueSummary } from './venue.model';
 import { SeatCategorySummary } from './seat-category.model';
 
@@ -16,7 +13,7 @@ export type EventCategory = 'MUSIC' | 'SPORTS' | 'CONFERENCE' | 'THEATRE' | 'OTH
  * Lifecycle states of an event:
  *  - DRAFT      → created but not visible to the public yet
  *  - PUBLISHED  → visible to all; customers can browse and book
- *  - CANCELLED  → all active bookings are cascade-cancelled; no new bookings allowed
+ *  - CANCELLED  → all active bookings are cascade-canceled; no new bookings allowed
  */
 export type EventStatus = 'DRAFT' | 'PUBLISHED' | 'CANCELLED';
 

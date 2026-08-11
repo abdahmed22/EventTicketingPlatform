@@ -1,11 +1,4 @@
-// ─── Person 2 Component: event-detail.component.ts ───────────────────────────
-// Route: '/events/:id'
-// Shared between all roles. Behaviour changes per role:
-//   - Public / Customer — view-only info + booking widget (PUBLISHED events only)
-//   - Organizer / Admin — management actions (publish, cancel, add seat category)
-//                         + attendee / bookings panel
-// Uses ActivatedRoute to read the event :id param from the URL.
-// ──────────────────────────────────────────────────────────────────────────────
+
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -32,7 +25,6 @@ interface SeatCategoryFormValue {
 }
 
 /**
- * Person 2 Component: EventDetailComponent
  *
  * Renders a single event's full detail. The component is role-aware:
  *
@@ -56,7 +48,7 @@ interface SeatCategoryFormValue {
   standalone: true,
   imports: [DatePipe, CurrencyPipe, RouterLink, FormField, FormRoot],
   templateUrl: './event-detail.component.html',
-  styleUrl: './event-detail.component.css'
+  styleUrl: './event-detail.component.css',
 })
 export class EventDetailComponent {
   // Expose Math/Number to the template (Angular templates can't call globals directly)
@@ -76,6 +68,7 @@ export class EventDetailComponent {
     return cat.availableSeats;
   }
 
+  // avoids a long constructor
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly eventService = inject(EventService);
@@ -84,27 +77,31 @@ export class EventDetailComponent {
   readonly authService = inject(AuthService); // public so the template can check role
 
   // ─ Core data signals ───────────────────────────────────────────────
-  readonly event = signal<EventResponse | null>(null);     // the loaded event
-  readonly loading = signal(true);                          // true while fetching
-  readonly error = signal<string | null>(null);             // error banner message
-  readonly actionSuccess = signal<string | null>(null);     // success banner message
+  readonly event = signal<EventResponse | null>(null); // the loaded event
+  readonly loading = signal(true); // is true we show loading message / fetching
+  readonly error = signal<string | null>(null); // error banner message
+  readonly actionSuccess = signal<string | null>(null); // success banner message
 
   // ─ Organizer/Admin: bookings panel ───────────────────────────────────
-  readonly bookings = signal<BookingResponse[]>([]);        // attendees list
+  readonly bookings = signal<BookingResponse[]>([]); // attendees list
   readonly bookingsLoading = signal(false);
   readonly bookingsError = signal<string | null>(null);
-  readonly showBookings = signal(false);                    // toggles the panel visibility
+  readonly showBookings = signal(false); // toggles the panel visibility
 
   // ─ Customer: booking widget state ─────────────────────────────────
-  readonly selectedSeatCategoryId = signal<string>('');    // which category the customer picked
-  readonly quantity = signal<number>(1);                    // how many tickets they want
-  readonly reserving = signal<boolean>(false);              // true while reserve() HTTP call is in-flight
+  readonly selectedSeatCategoryId = signal<string>(''); // which category the customer picked
+  readonly quantity = signal<number>(1); // how many tickets they want
+  readonly reserving = signal<boolean>(false); // true while reserve() HTTP call is in-flight
 
   /**
    * Derived: resolves the selected seat category object from the event's
    * seatCategories array. Used by the template for price calculation and
    * availability badge display.
    */
+
+  //It looks up the full seat category object that matches whatever
+  // id the customer currently has selected in a dropdown/radio list.
+
   readonly selectedCategory = computed(() => {
     const categoryId = this.selectedSeatCategoryId();
     const evt = this.event();
@@ -113,8 +110,8 @@ export class EventDetailComponent {
   });
 
   // ─ Organizer: "Add Seat Category" modal state ────────────────────────
-  readonly showSeatModal = signal(false);         // controls modal visibility
-  readonly submittingCategory = signal(false);     // true while the form is being submitted
+  readonly showSeatModal = signal(false); // controls modal visibility
+  readonly submittingCategory = signal(false); // true while the form is being submitted
 
   /**
    * Reactive model backing the seat category Signal Form.
@@ -124,7 +121,7 @@ export class EventDetailComponent {
     name: '',
     price: 50,
     totalSeats: 100,
-    seatingCapacity: 1
+    seatingCapacity: 1,
   });
 
   /**
@@ -132,9 +129,15 @@ export class EventDetailComponent {
    * Validators run reactively on each field. On submit, calls
    * SeatCategoryService.create() then reloads the event to show the new category.
    */
+
+
+  //signal form
+
   readonly seatForm = form(
     this.seatModel,
     (path) => {
+
+      //constraints / validations
       required(path.name, { message: 'Category name is required' });
       required(path.price, { message: 'Price is required' });
       min(path.price, 0, { message: 'Price cannot be negative' });
@@ -145,8 +148,10 @@ export class EventDetailComponent {
     },
     {
       submission: {
+        //after submission
         action: async (field) => {
           const evt = this.event();
+          // if event doesnt exist return
           if (!evt) return;
           try {
             this.submittingCategory.set(true);
@@ -155,8 +160,9 @@ export class EventDetailComponent {
               name: val.name,
               price: val.price,
               totalSeats: val.totalSeats,
-              seatingCapacity: val.seatingCapacity
+              seatingCapacity: val.seatingCapacity,
             };
+            //Build the API request payload from those values.
             // POST /api/organizer/events/{id}/seat-categories
             await firstValueFrom(this.seatCategoryService.create(evt.id, req));
             this.showSeatModal.set(false);
@@ -169,10 +175,12 @@ export class EventDetailComponent {
           } finally {
             this.submittingCategory.set(false);
           }
-        }
-      }
-    }
+        },
+      },
+    },
   );
+
+
 
   constructor() {
     // Read the ':id' route param and kick off the event fetch
@@ -197,13 +205,15 @@ export class EventDetailComponent {
     this.loading.set(true);
     this.error.set(null);
 
-    const fetch$ = this.authService.isAdmin()
+    //Pick the right endpoint based on role
+    const fetch = this.authService.isAdmin()
       ? this.eventService.adminGetById(id)
       : this.authService.isOrganizer()
-      ? this.eventService.getOrganizerById(id)
-      : this.eventService.getPublicById(id);
+        ? this.eventService.getOrganizerById(id)
+        : this.eventService.getPublicById(id);
 
-    fetch$.subscribe({
+    fetch.subscribe({
+      //actually trigger the request
       next: (res) => {
         this.event.set(res);
         // Auto-select first seat category for the booking widget
@@ -215,7 +225,7 @@ export class EventDetailComponent {
       error: (err: unknown) => {
         this.error.set(err instanceof ApiError ? err.message : 'Failed to load event details.');
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -299,7 +309,7 @@ export class EventDetailComponent {
       .reserve({
         eventId: evt.id,
         seatCategoryId: this.selectedSeatCategoryId(),
-        quantity: this.quantity()
+        quantity: this.quantity(),
       })
       .subscribe({
         next: () => {
@@ -310,14 +320,14 @@ export class EventDetailComponent {
           if (err instanceof ApiError && err.status === 409) {
             // Seat conflict — someone else took the seat(s) at the same time
             this.error.set(
-              'The selected seats are no longer available. Available seat counts have been updated. Please select another quantity or seat category.'
+              'The selected seats are no longer available. Available seat counts have been updated. Please select another quantity or seat category.',
             );
           } else {
             this.error.set(err instanceof ApiError ? err.message : 'Failed to reserve seats');
           }
           this.loadEvent(evt.id); // refresh live availableSeats after conflict
           this.reserving.set(false);
-        }
+        },
       });
   }
 
@@ -334,13 +344,15 @@ export class EventDetailComponent {
     this.eventService.publish(evt.id).subscribe({
       next: (updated) => {
         this.event.set(updated);
-        this.actionSuccess.set('Event published successfully! It is now visible in public browse listings.');
+        this.actionSuccess.set(
+          'Event published successfully! It is now visible in public browse listings.',
+        );
         this.loading.set(false);
       },
       error: (err: unknown) => {
         this.error.set(err instanceof ApiError ? err.message : 'Failed to publish event.');
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -353,7 +365,11 @@ export class EventDetailComponent {
     const evt = this.event();
     if (!evt) return;
 
-    if (!confirm('Are you sure you want to cancel this event? This action will cascade-cancel active bookings.')) {
+    if (
+      !confirm(
+        'Are you sure you want to cancel this event? This action will cascade-cancel active bookings.',
+      )
+    ) {
       return;
     }
 
@@ -372,7 +388,7 @@ export class EventDetailComponent {
       error: (err: unknown) => {
         this.error.set(err instanceof ApiError ? err.message : 'Failed to cancel event.');
         this.loading.set(false);
-      }
+      },
     });
   }
 
@@ -430,7 +446,7 @@ export class EventDetailComponent {
       error: (err: unknown) => {
         this.bookingsError.set(err instanceof ApiError ? err.message : 'Failed to load bookings.');
         this.bookingsLoading.set(false);
-      }
+      },
     });
   }
 

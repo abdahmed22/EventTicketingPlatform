@@ -42,6 +42,11 @@ export class EventService {
    * No auth token required — accessible by anyone, including anonymous users.
    * Used by EventListComponent to populate the browse catalog.
    */
+
+
+  // Calling browsePublished() doesn't actually make the HTTP request yet —
+  // it just returns a "recipe" for how to make it.
+  // The request only fires when something calls .subscribe() on it, e.g.:
   browsePublished(filters: EventFilterParams = {}): Observable<PageResponse<EventSummary>> {
     let params = this.buildFilterParams(filters);
     return this.http.get<PageResponse<EventSummary>>(`${this.apiUrl}/events`, { params });
@@ -114,7 +119,7 @@ export class EventService {
 
   /**
    * POST /api/organizer/events/{id}/cancel (organizer path)
-   * Transitions the event to CANCELLED. The backend cascade-cancels all
+   * Transitions the event to CANCELED. The backend cascade-cancels all
    * PENDING and CONFIRMED bookings for that event.
    */
   organizerCancel(id: string): Observable<EventResponse> {
@@ -142,7 +147,10 @@ export class EventService {
   }
 
   /** PUT /api/admin/events/{id} — admin update any event field */
-  adminUpdate(id: string, request: Partial<EventUpdateRequest> & { status?: string }): Observable<EventResponse> {
+  adminUpdate(
+    id: string,
+    request: Partial<EventUpdateRequest> & { status?: string },
+  ): Observable<EventResponse> {
     return this.http.put<EventResponse>(`${this.apiUrl}/admin/events/${id}`, request);
   }
 
@@ -172,8 +180,10 @@ export class EventService {
     if (filters.category) params = params.set('category', filters.category);
     if (filters.dateFrom) params = params.set('dateFrom', filters.dateFrom);
     if (filters.dateTo) params = params.set('dateTo', filters.dateTo);
-    if (filters.minPrice !== undefined && filters.minPrice !== null) params = params.set('minPrice', filters.minPrice.toString());
-    if (filters.maxPrice !== undefined && filters.maxPrice !== null) params = params.set('maxPrice', filters.maxPrice.toString());
+    if (filters.minPrice !== undefined && filters.minPrice !== null)
+      params = params.set('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice !== undefined && filters.maxPrice !== null)
+      params = params.set('maxPrice', filters.maxPrice.toString());
     if (filters.venueId) params = params.set('venueId', filters.venueId);
     if (filters.organizerId) params = params.set('organizerId', filters.organizerId);
     if (filters.page !== undefined) params = params.set('page', filters.page.toString());
