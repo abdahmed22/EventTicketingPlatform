@@ -56,6 +56,11 @@ export class EventListComponent {
   }
 
   loadEvents(): void {
+    if (this.dateFrom() && this.dateTo() && this.dateFrom() > this.dateTo()) {
+      this.error.set('Start date (Date From) cannot be after end date (Date To).');
+      return;
+    }
+
     this.loading.set(true);
     this.error.set(null);
 
