@@ -14,7 +14,10 @@ import java.util.UUID;
 public abstract class TicketsDTO {
 
     public record Attendee(UUID ticket, UUID customer) { }
-    
+
+    // One ticket now covers every seat in its booking, so every response
+    // shape below carries `quantity` (number of seats/attendees covered).
+
     public record CustomerTicket(String ticketCode,
                                  Instant createdAt,
                                  UUID bookingId,
@@ -22,6 +25,7 @@ public abstract class TicketsDTO {
                                  UUID evnt,
                                  UUID venue,
                                  UUID userOwnerUUID,
+                                 Integer quantity,
                                  BigDecimal totalPrice,
                                  TicketStatus status
                                  ) {}
@@ -33,6 +37,7 @@ public abstract class TicketsDTO {
                                  UUID evnt,
                                  UUID venue,
                                  UUID userOwnerUUID,
+                                 Integer quantity,
                                  BigDecimal totalPrice,
                                  TicketStatus status,
                                  List<TicketAttendee> attendees) {}
@@ -45,6 +50,7 @@ public abstract class TicketsDTO {
                                       UUID evnt,
                                       UUID venue,
                                       UUID userOwnerUUID,
+                                      Integer quantity,
                                       BigDecimal totalPrice,
                                       TicketStatus status) {}
 
@@ -53,6 +59,7 @@ public abstract class TicketsDTO {
                                                 UUID seat,
                                                 UUID venue,
                                                 UUID userOwnerUUID,
+                                                Integer quantity,
                                                 BigDecimal totalPrice,
                                                 TicketStatus status) {}
 
@@ -61,6 +68,7 @@ public abstract class TicketsDTO {
                                                 UUID seat,
                                                 UUID venue,
                                                 UUID userOwnerUUID,
+                                                Integer quantity,
                                                 BigDecimal totalPrice,
                                                 TicketStatus status) {}
     
@@ -70,6 +78,7 @@ public abstract class TicketsDTO {
                           UUID evnt,
                           UUID venue,
                           UUID userOwnerUUID,
+                          Integer quantity,
                           BigDecimal totalPrice,
                           TicketStatus status) {}
 
@@ -79,6 +88,7 @@ public abstract class TicketsDTO {
                           UUID evnt,
                           UUID venue,
                           UUID userOwnerUUID,
+                          Integer quantity,
                           BigDecimal totalPrice,
                           TicketStatus status,
                           List<Attendee> attendees) {}

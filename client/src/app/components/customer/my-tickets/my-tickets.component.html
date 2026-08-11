@@ -11,6 +11,10 @@
     <div class="banner banner-error">{{ error() }}</div>
   }
 
+  @if (downloadError()) {
+    <div class="banner banner-error">{{ downloadError() }}</div>
+  }
+
   @if (loading()) {
     <div class="loading-box">Loading your tickets...</div>
   } @else if (views().length === 0) {
@@ -58,7 +62,7 @@
 
             <div class="info-block">
               <span class="info-label">Booking</span>
-              <span class="info-value">{{ view.booking?.quantity ?? 1 }} seat(s)</span>
+              <span class="info-value">{{ view.ticket.quantity }} seat(s)</span>
               @if (view.booking) {
                 <span class="info-sub">{{ view.booking.status }}</span>
               }
@@ -79,6 +83,14 @@
             <a [routerLink]="['/customer/tickets', view.ticket.ticketCode]" class="btn btn-ghost">
               Open Details
             </a>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="downloadingBookingId() === view.ticket.bookingId"
+              (click)="downloadPdf(view.ticket)"
+            >
+              {{ downloadingBookingId() === view.ticket.bookingId ? 'Preparing PDF…' : 'Download PDF' }}
+            </button>
           </div>
         </div>
       }

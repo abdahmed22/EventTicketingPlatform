@@ -45,8 +45,9 @@
       <div class="attendee-table">
         <div class="table-head">
           <span>Ticket Code</span>
-          <span>Attendee</span>
+          <span>Booking Owner</span>
           <span>Seat Category</span>
+          <span>Party Size</span>
           <span>Total</span>
           <span>Status</span>
           <span>Action</span>
@@ -56,6 +57,7 @@
             <span class="cell mono" [title]="ticket.ticketCode">{{ ticket.ticketCode }}</span>
             <span class="cell mono small" [title]="ticket.userOwnerUUID">{{ ticket.userOwnerUUID }}</span>
             <span class="cell">{{ seatCategoryName(ticket) }}</span>
+            <span class="cell">{{ ticket.quantity }}</span>
             <span class="cell">{{ ticket.totalPrice | currency }}</span>
             <span>
               <span class="status-badge" [class]="'status-' + ticket.status.toLowerCase()">

@@ -136,7 +136,15 @@
             <div class="booking-actions">
               <button
                 type="button"
-                class="action-btn cancel-btn full-width"
+                class="action-btn view-btn"
+                [disabled]="downloadingId() === booking.id"
+                (click)="downloadTicket(booking.id)"
+              >
+                @if (downloadingId() === booking.id) { Preparing… } @else { Download Ticket }
+              </button>
+              <button
+                type="button"
+                class="action-btn cancel-btn"
                 [disabled]="actioningId() === booking.id"
                 (click)="cancelBooking(booking.id)"
               >

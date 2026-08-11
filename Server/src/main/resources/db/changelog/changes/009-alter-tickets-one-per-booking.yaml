@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: 009-add-tickets-quantity-column
+      author: event-ticketing
+      comment: >
+        Tickets now represent a whole booking (every seat in that booking)
+        instead of a single seat, so the ticket needs to record how many
+        seats/attendees it covers.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - columnExists:
+                tableName: tickets
+                columnName: quantity
+      changes:
+        - addColumn:
+            tableName: tickets
+            columns:
+              - column:
+                  name: quantity
+                  type: INT
+                  defaultValueNumeric: 1
+                  remarks: Number of seats/attendees this ticket covers (copied from booking.quantity)
+                  constraints:
+                    nullable: false
+
+      rollback:
+        - dropColumn:
+            tableName: tickets
+            columnName: quantity
+
+  - changeSet:
+      id: 009-dedupe-tickets-before-unique-booking-id
+      author: event-ticketing
+      comment: >
+        Safety net for environments seeded under the old one-ticket-per-seat
+        model: keep only the earliest ticket per booking so the new unique
+        constraint on booking_id can be applied cleanly.
+      preConditions:
+        - onFail: MARK_RAN
+        - dbms:
+            type: postgresql
+      changes:
+        - sql:
+            sql: >
+              DELETE FROM tickets t
+              USING tickets dup
+              WHERE t.booking_id = dup.booking_id
+                AND t.creation_date > dup.creation_date
+                AND t.uuid <> dup.uuid;
+      rollback: []
+
+  - changeSet:
+      id: 009-add-unique-constraint-tickets-booking-id
+      author: event-ticketing
+      comment: One ticket per booking - covers every seat purchased in that booking.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - indexExists:
+                tableName: tickets
+                indexName: uq_tickets_booking_id
+      changes:
+        - addUniqueConstraint:
+            tableName: tickets
+            columnNames: booking_id
+            constraintName: uq_tickets_booking_id
+
+      rollback:
+        - dropUniqueConstraint:
+            tableName: tickets
+            constraintName: uq_tickets_booking_id

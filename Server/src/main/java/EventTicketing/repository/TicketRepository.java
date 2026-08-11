@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -20,6 +21,12 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     // Get a single ticket by its primary-key UUID (used by admin & customer)
     @Query("SELECT t FROM Ticket t WHERE t.uuid = :uuid")
     Ticket getTicketByUUID(@Param("uuid") UUID uuid);
+
+    // One ticket per booking - used to fetch/generate the single ticket
+    // that covers every seat in a booking (e.g. for PDF download).
+    Optional<Ticket> findByBookingId(UUID bookingId);
+
+    boolean existsByBookingId(UUID bookingId);
 
     // Fix: JPQL param name was :event_UUID (uppercase) but @Param said "event_uuid"
     @Query("SELECT t FROM Ticket t WHERE t.evnt = :eventUuid")
@@ -48,6 +55,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
             "t.evnt = :evnt, " +
             "t.venue = :venue, " +
             "t.userOwnerUUID = :userOwnerUUID, " +
+            "t.quantity = :quantity, " +
             "t.totalPrice = :totalPrice, " +
             "t.status = :status " +
             "WHERE t.uuid = :ticketId")
@@ -59,6 +67,7 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
                       @Param("evnt") UUID evnt,
                       @Param("venue") UUID venue,
                       @Param("userOwnerUUID") UUID userOwnerUUID,
+                      @Param("quantity") Integer quantity,
                       @Param("totalPrice") BigDecimal totalPrice,
                       @Param("status") TicketStatus status);
 

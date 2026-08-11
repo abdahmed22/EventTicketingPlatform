@@ -35,11 +35,13 @@ export const routes: Routes = [
   },
   {
     path: 'bookings',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./components/booking/my-bookings/my-bookings.component').then(
-        (m) => m.MyBookingsComponent
-      )
+    pathMatch: 'full',
+    redirectTo: 'customer/bookings'
+  },
+  {
+    path: 'tickets',
+    pathMatch: 'full',
+    redirectTo: 'customer/tickets'
   },
   {
     path: 'organizer/events',
@@ -94,12 +96,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () =>
       import('./components/customer/booking-detail/booking-detail.component').then((m) => m.BookingDetailComponent)
-  },
-  {
-    path: 'admin/dashboard',
-    canActivate: [adminGuard],
-    loadComponent: () =>
-      import('./components/admin/dashboard/dashboard.component').then((m) => m.AdminDashboardComponent)
   },
   {
     path: 'admin/events',

@@ -26,3 +26,6 @@ databaseChangeLog:
 
   - include:
       file: db/changelog/changes/008-create-ticket-attendee-table.yaml
+
+  - include:
+      file: db/changelog/changes/009-alter-tickets-one-per-booking.yaml

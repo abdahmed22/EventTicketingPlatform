@@ -46,12 +46,26 @@
           <span class="mini-value">{{ t.totalPrice | currency }}</span>
         </div>
         <div>
-          <span class="mini-label">Owner</span>
-          <span class="mini-value mono small">{{ t.userOwnerUUID }}</span>
+          <span class="mini-label">Qty</span>
+          <span class="mini-value">{{ t.quantity }}</span>
         </div>
-        @if (t.status !== 'CANCELLED') {
-          <button type="button" class="btn btn-danger" (click)="cancelTicket(t)">Void</button>
-        }
+        <div>
+          <span class="mini-label">Owner</span>
+          <span class="mini-value" [title]="t.userOwnerUUID">{{ ownerName(t) }}</span>
+        </div>
+        <div class="mini-actions">
+          <button
+            type="button"
+            class="btn btn-secondary sm"
+            [disabled]="downloadingId() === t.uuid"
+            (click)="downloadTicket(t)"
+          >
+            {{ downloadingId() === t.uuid ? 'Preparing…' : 'Download' }}
+          </button>
+          @if (t.status !== 'CANCELLED') {
+            <button type="button" class="btn btn-danger" (click)="cancelTicket(t)">Void</button>
+          }
+        </div>
       </div>
     }
   </section>
@@ -81,6 +95,7 @@
           <div class="row head">
             <span>Ticket Code</span>
             <span>Seat Category</span>
+            <span>Qty</span>
             <span>Owner</span>
             <span>Total</span>
             <span>Status</span>
@@ -88,14 +103,23 @@
           </div>
           @for (ticket of tickets(); track ticket.uuid) {
             <div class="row">
-              <span class="cell mono" [title]="ticket.ticketCode">{{ ticket.ticketCode }}</span>
+              <span class="cell mono wrap">{{ ticket.ticketCode }}</span>
               <span class="cell">{{ seatCategoryName(ticket) }}</span>
-              <span class="cell mono small" [title]="ticket.userOwnerUUID">{{ ticket.userOwnerUUID }}</span>
+              <span class="cell">{{ ticket.quantity }}</span>
+              <span class="cell" [title]="ticket.userOwnerUUID">{{ ownerName(ticket) }}</span>
               <span class="cell">{{ ticket.totalPrice | currency }}</span>
               <span class="cell">
                 <span class="status-badge" [class]="'status-' + ticket.status.toLowerCase()">{{ ticketStatusLabel(ticket.status) }}</span>
               </span>
-              <span class="cell">
+              <span class="cell actions-cell">
+                <button
+                  type="button"
+                  class="btn btn-secondary sm"
+                  [disabled]="downloadingId() === ticket.uuid"
+                  (click)="downloadTicket(ticket)"
+                >
+                  {{ downloadingId() === ticket.uuid ? '...' : 'Download' }}
+                </button>
                 @if (ticket.status !== 'CANCELLED') {
                   <button
                     type="button"
@@ -105,8 +129,6 @@
                   >
                     {{ actioningId() === ticket.uuid ? '...' : 'Void' }}
                   </button>
-                } @else {
-                  <span class="muted">—</span>
                 }
               </span>
             </div>

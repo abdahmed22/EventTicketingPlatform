@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -191,18 +190,9 @@ public class BookingService {
     Booking savedBooking =
         bookingRepository.save(booking);
 
-    // Generate one ticket per seat quantity now that the booking is confirmed
-    BigDecimal perTicketPrice = savedBooking.getTotalPrice()
-        .divide(BigDecimal.valueOf(savedBooking.getQuantity()), 2, RoundingMode.HALF_UP);
-    for (int i = 0; i < savedBooking.getQuantity(); i++) {
-      ticketService.generateTicket(
-          savedBooking.getId(),
-          savedBooking.getSeatCategory().getId(),
-          savedBooking.getEvent().getId(),
-          savedBooking.getEvent().getVenueId(),
-          savedBooking.getUser().getId(),
-          perTicketPrice);
-    }
+    // Issue the single ticket covering every seat in this booking now that
+    // it is confirmed. One ticket per booking - not one per seat.
+    ticketService.generateTicketForBooking(savedBooking);
 
     return BookingDto.Response.from(
         savedBooking);
@@ -261,6 +251,11 @@ public class BookingService {
 
     Booking savedBooking =
         bookingRepository.save(booking);
+
+    // If this booking had already been confirmed, its ticket was already
+    // issued — void it too so a cancelled booking never leaves a valid
+    // downloadable/checkable ticket behind.
+    ticketService.voidTicketForBooking(savedBooking.getId());
 
     return BookingDto.Response.from(
         savedBooking);
@@ -407,6 +402,10 @@ public class BookingService {
 
         booking.setCancelledAt(
             Instant.now());
+
+        // The booking was CONFIRMED, so a ticket had already been issued -
+        // void it along with the booking.
+        ticketService.voidTicketForBooking(booking.getId());
       }
 
       bookingRepository.save(booking);

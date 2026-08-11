@@ -32,9 +32,13 @@ public class Ticket {
     @Column(name = "creation_date")
     private Instant createdAt;
 
-    @Column(name = "booking_id", nullable = false)
+    // One ticket is issued per booking (covering every seat in that booking),
+    // so this FK is unique - see 009-alter-tickets-one-per-booking.yaml.
+    @Column(name = "booking_id", nullable = false, unique = true)
     private UUID bookingId;
 
+    // The seat category the booking was made for. A single ticket can cover
+    // several seats within this category - see `quantity` below.
     @Column(name = "seat", nullable = false)
     private UUID seat;
 
@@ -46,6 +50,12 @@ public class Ticket {
 
     @Column(name = "user_owner_uuid", nullable = false)
     private UUID userOwnerUUID;
+
+    // Number of seats/attendees this single ticket covers, copied from the
+    // booking's quantity at issue time.
+    @Column(name = "quantity", nullable = false)
+    @Builder.Default
+    private Integer quantity = 1;
 
     @Column(name = "total_price")
     private BigDecimal totalPrice;
