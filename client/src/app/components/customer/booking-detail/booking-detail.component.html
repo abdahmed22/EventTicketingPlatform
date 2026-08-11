@@ -31,27 +31,38 @@
     </section>
 
     <section class="card">
-      <h2 class="section-title">Tickets in this Booking</h2>
+      <h2 class="section-title">Your Ticket</h2>
+
+      @if (downloadError()) {
+        <div class="banner banner-error">{{ downloadError() }}</div>
+      }
 
       @if (tickets().length === 0) {
-        <p class="muted">No tickets have been issued for this booking yet. Tickets are generated once a booking is confirmed.</p>
+        <p class="muted">No ticket has been issued for this booking yet. A ticket is generated automatically once a booking is confirmed.</p>
       } @else {
-        <div class="ticket-rows">
-          @for (ticket of tickets(); track ticket.ticketCode) {
-            <div class="ticket-row">
-              <div class="ticket-row-main">
-                <span class="ticket-code">{{ ticket.ticketCode }}</span>
-                <span class="status-badge sm" [class]="'status-' + ticket.status.toLowerCase()">
-                  {{ ticketStatusLabel(ticket.status) }}
-                </span>
-              </div>
-              <div class="ticket-row-side">
-                <span class="price">{{ ticket.totalPrice | currency }}</span>
-                <a [routerLink]="['/customer/tickets', ticket.ticketCode]" class="btn btn-ghost">Details</a>
-              </div>
+        @for (ticket of tickets(); track ticket.ticketCode) {
+          <div class="ticket-row">
+            <div class="ticket-row-main">
+              <span class="ticket-code">{{ ticket.ticketCode }}</span>
+              <span class="status-badge sm" [class]="'status-' + ticket.status.toLowerCase()">
+                {{ ticketStatusLabel(ticket.status) }}
+              </span>
+              <span class="muted">Covers {{ ticket.quantity }} seat{{ ticket.quantity === 1 ? '' : 's' }}</span>
             </div>
-          }
-        </div>
+            <div class="ticket-row-side">
+              <span class="price">{{ ticket.totalPrice | currency }}</span>
+              <a [routerLink]="['/customer/tickets', ticket.ticketCode]" class="btn btn-ghost">Details</a>
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="downloading()"
+                (click)="downloadPdf()"
+              >
+                {{ downloading() ? 'Preparing PDF…' : 'Download PDF' }}
+              </button>
+            </div>
+          </div>
+        }
       }
     </section>
   } }

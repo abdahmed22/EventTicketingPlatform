@@ -1,11 +1,16 @@
 package EventTicketing.service;
 
 import EventTicketing.dto.TicketsDTO;
+import EventTicketing.exception.ForbiddenActionException;
 import EventTicketing.exception.ResourceNotFoundException;
+import EventTicketing.model.Booking;
 import EventTicketing.model.Event;
 import EventTicketing.model.Ticket;
 import EventTicketing.model.TicketAttendee;
+import EventTicketing.model.User;
 import EventTicketing.model.enums.TicketStatus;
+import EventTicketing.model.enums.UserRole;
+import EventTicketing.repository.BookingRepository;
 import EventTicketing.repository.EventRepository;
 import EventTicketing.repository.TicketAttendeeRepository;
 import EventTicketing.repository.TicketRepository;
@@ -13,7 +18,6 @@ import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
@@ -30,6 +34,8 @@ public class TicketService {
     private TicketRepository ticketRepository;
     private TicketAttendeeRepository taRepo;
     private EventRepository eventRepository;
+    private BookingRepository bookingRepository;
+    private TicketPdfService ticketPdfService;
 
     // -----------------------------------------------------------------------
     // Code generation
@@ -57,38 +63,37 @@ public class TicketService {
     // -----------------------------------------------------------------------
 
     /**
-     * Creates one ticket record for a confirmed booking.
+     * Issues the single ticket for a confirmed booking. One ticket now
+     * covers every seat purchased in the booking (see `quantity`) instead
+     * of a separate ticket per seat.
+     * <p>
      * The caller MUST ensure the booking is already in CONFIRMED state
      * before invoking this method — no re-lookup is performed here so
      * this can safely be called within the same transaction as confirm().
+     * It is also idempotent: if a ticket already exists for this booking
+     * (e.g. a retried request), the existing ticket is returned unchanged
+     * rather than creating a duplicate.
      *
-     * @param bookingId      the confirmed booking UUID
-     * @param seatCategoryId the seat category UUID (used as the "seat" FK)
-     * @param evnt           the event UUID
-     * @param venue          the venue UUID
-     * @param userOwnerUUID  the customer who owns this ticket
-     * @param totalPrice     price for this individual ticket (booking total / quantity)
+     * @param booking the confirmed booking to issue a ticket for
      */
     @Transactional
-    public Ticket generateTicket(UUID bookingId,
-                                 UUID seatCategoryId,
-                                 UUID evnt,
-                                 UUID venue,
-                                 UUID userOwnerUUID,
-                                 BigDecimal totalPrice) {
+    public Ticket generateTicketForBooking(Booking booking) {
+        return ticketRepository.findByBookingId(booking.getId())
+                .orElseGet(() -> {
+                    Ticket t = Ticket.builder()
+                            .ticketCode(makeTicketCode())
+                            .bookingId(booking.getId())
+                            .seat(booking.getSeatCategory().getId())
+                            .evnt(booking.getEvent().getId())
+                            .venue(booking.getEvent().getVenueId())
+                            .userOwnerUUID(booking.getUser().getId())
+                            .quantity(booking.getQuantity())
+                            .totalPrice(booking.getTotalPrice())
+                            .status(TicketStatus.ISSUED)
+                            .build();
 
-        Ticket t = Ticket.builder()
-                .ticketCode(makeTicketCode())
-                .bookingId(bookingId)
-                .seat(seatCategoryId)
-                .evnt(evnt)
-                .venue(venue)
-                .userOwnerUUID(userOwnerUUID)
-                .totalPrice(totalPrice)
-                .status(TicketStatus.ISSUED)
-                .build();
-
-        return ticketRepository.save(t);
+                    return ticketRepository.save(t);
+                });
     }
 
     // -----------------------------------------------------------------------
@@ -127,6 +132,14 @@ public class TicketService {
         return ticketRepository.getTicketByUUID(ticketUUID);
     }
 
+    /**
+     * Fetches the single ticket issued for a booking. Returns null if the
+     * booking has not been confirmed yet (no ticket issued).
+     */
+    public Ticket getTicketForBooking(UUID bookingId) {
+        return ticketRepository.findByBookingId(bookingId).orElse(null);
+    }
+
     // -----------------------------------------------------------------------
     // Check-in
     // -----------------------------------------------------------------------
@@ -160,7 +173,7 @@ public class TicketService {
     public Integer editTicket(UUID ticketId, TicketsDTO.Request newData) {
         return ticketRepository.updateTicket(ticketId, newData.ticketCode(), newData.createdAt(),
                 newData.bookingId(), newData.seat(), newData.evnt(), newData.venue(),
-                newData.userOwnerUUID(), newData.totalPrice(), newData.status());
+                newData.userOwnerUUID(), newData.quantity(), newData.totalPrice(), newData.status());
     }
 
     @Transactional
@@ -177,11 +190,38 @@ public class TicketService {
     }
 
     /**
-     * Voids (cancels) all ISSUED tickets for a given booking — used when a booking
-     * is cancelled after tickets have already been issued.
+     * Voids (cancels) the ticket for a given booking — used when a booking
+     * is cancelled after its ticket has already been issued. A no-op if no
+     * ticket was ever issued for the booking (e.g. it was still PENDING).
      */
     @Transactional
-    public void voidTicketsForBooking(UUID bookingId) {
+    public void voidTicketForBooking(UUID bookingId) {
         ticketRepository.updateStatusByBookingId(bookingId, TicketStatus.ISSUED, TicketStatus.CANCELLED);
+    }
+
+    // -----------------------------------------------------------------------
+    // PDF download
+    // -----------------------------------------------------------------------
+
+    /**
+     * Generates the downloadable PDF for the ticket issued to a booking.
+     * Only the booking's owner (or an admin) may download it.
+     */
+    @Transactional
+    public byte[] generateTicketPdf(UUID bookingId, User requester) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+
+        boolean isOwner = booking.getUser().getId().equals(requester.getId());
+        boolean isAdmin = requester.getRole() == UserRole.ADMIN;
+        if (!isOwner && !isAdmin) {
+            throw new ForbiddenActionException("You do not have access to this booking's ticket");
+        }
+
+        Ticket ticket = ticketRepository.findByBookingId(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No ticket has been issued for this booking yet. Tickets are issued once a booking is confirmed."));
+
+        return ticketPdfService.render(ticket, booking);
     }
 }

@@ -21,6 +21,9 @@ export function ticketStatusLabel(status: TicketStatus): string {
 /**
  * GET /api/tickets/customer/{customer}?customer={customer}
  *
+ * One ticket is now issued per booking and covers every seat purchased in
+ * that booking (see `quantity`), instead of a separate ticket per seat.
+ *
  * NOTE: the backend ticket payloads only carry UUIDs for the related event,
  * venue and seat category. The frontend enriches them with the public event
  * detail and the customer's own bookings to render readable information.
@@ -33,6 +36,8 @@ export interface CustomerTicket {
   evnt: string;
   venue: string;
   userOwnerUUID: string;
+  /** Number of seats/attendees this single ticket covers (one ticket per booking). */
+  quantity: number;
   totalPrice: number;
   status: TicketStatus;
 }
@@ -44,6 +49,7 @@ export interface OrganizerEventTicket {
   seat: string;
   venue: string;
   userOwnerUUID: string;
+  quantity: number;
   totalPrice: number;
   status: TicketStatus;
 }
@@ -58,6 +64,7 @@ export interface AdminTicket {
   evnt: string;
   venue: string;
   userOwnerUUID: string;
+  quantity: number;
   totalPrice: number;
   status: TicketStatus;
 }

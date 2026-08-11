@@ -11,6 +11,8 @@ import { RouterLink } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
 
 import { BookingService } from '../../../services/booking/booking.service';
+import { TicketService } from '../../../services/ticket/ticket.service';
+import { AuthService } from '../../../services/auth/auth.service';
 
 import {
   BookingResponse,
@@ -28,6 +30,8 @@ import { ApiError } from '../../../models/api-error.model';
 export class MyBookingsComponent implements OnInit, OnDestroy {
 
   private readonly bookingService = inject(BookingService);
+  private readonly ticketService = inject(TicketService);
+  private readonly authService = inject(AuthService);
 
   private timerSubscription?: Subscription;
 
@@ -38,6 +42,8 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
   readonly error = signal<string | null>(null);
 
   readonly actioningId = signal<string | null>(null);
+
+  readonly downloadingId = signal<string | null>(null);
 
   readonly remainingTimes =
     signal<Record<string, string>>({});
@@ -326,6 +332,56 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
           this.actioningId.set(null);
 
           this.loadBookings();
+        },
+      });
+  }
+
+
+  // Downloads the single PDF ticket issued for a confirmed booking
+  // (covers every seat in that booking).
+  downloadTicket(
+    bookingId: string
+  ): void {
+
+    if (this.downloadingId()) {
+      return;
+    }
+
+    const userId = this.authService.user()?.id;
+
+    if (!userId) {
+      this.error.set('You must be logged in to download your ticket.');
+      return;
+    }
+
+    this.downloadingId.set(bookingId);
+    this.error.set(null);
+
+    this.ticketService
+      .downloadTicketPdf(userId, bookingId)
+      .subscribe({
+
+        next: (blob) => {
+
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `ticket-${bookingId}.pdf`;
+          link.click();
+          URL.revokeObjectURL(url);
+
+          this.downloadingId.set(null);
+        },
+
+        error: (err: unknown) => {
+
+          this.error.set(
+            err instanceof ApiError
+              ? err.message
+              : 'Failed to download ticket PDF'
+          );
+
+          this.downloadingId.set(null);
         },
       });
   }

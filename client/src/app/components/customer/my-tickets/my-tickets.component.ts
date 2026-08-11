@@ -50,6 +50,9 @@ export class MyTicketsComponent {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
 
+  readonly downloadingBookingId = signal<string | null>(null);
+  readonly downloadError = signal<string | null>(null);
+
   constructor() {
     this.load();
   }
@@ -116,5 +119,32 @@ export class MyTicketsComponent {
     const seat = view.ticket.seat;
     const found = view.event?.seatCategories.find((category) => category.id === seat);
     return found?.name ?? '—';
+  }
+
+  // Downloads the PDF for a ticket's booking (covers every seat in it).
+  downloadPdf(ticket: CustomerTicket): void {
+    const userId = this.authService.user()?.id;
+    if (!userId) {
+      return;
+    }
+
+    this.downloadingBookingId.set(ticket.bookingId);
+    this.downloadError.set(null);
+
+    this.ticketService.downloadTicketPdf(userId, ticket.bookingId).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `ticket-${ticket.bookingId}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
+        this.downloadingBookingId.set(null);
+      },
+      error: (err: unknown) => {
+        this.downloadError.set(err instanceof ApiError ? err.message : 'Failed to download ticket PDF.');
+        this.downloadingBookingId.set(null);
+      }
+    });
   }
 }

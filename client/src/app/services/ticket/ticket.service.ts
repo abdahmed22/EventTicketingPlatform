@@ -19,6 +19,16 @@ export class TicketService {
     return this.http.get<CustomerTicket[]>(`${this.apiUrl}/tickets/customer/${customerId}`);
   }
 
+  // Customer: download the single PDF ticket issued for a booking (covers
+  // every seat in that booking). Only available once the booking is
+  // CONFIRMED (i.e. a ticket has been issued).
+  // Backend route: GET /api/tickets/customer/{customerId}/booking/{bookingId}/pdf
+  downloadTicketPdf(customerId: string, bookingId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/tickets/customer/${customerId}/booking/${bookingId}/pdf`, {
+      responseType: 'blob'
+    });
+  }
+
   // Organizer: list tickets issued for one of the organizer's own events.
   // Backend route: GET /api/tickets/organizer/{event_uuid}
   listOrganizerEventTickets(eventId: string): Observable<OrganizerEventTicket[]> {

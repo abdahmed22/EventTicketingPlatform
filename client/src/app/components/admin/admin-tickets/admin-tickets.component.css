@@ -173,7 +173,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1.4fr 0.8fr 1fr 0.9fr;
+  grid-template-columns: 1.9fr 1fr 0.5fr 1.2fr 0.8fr 1fr 1.4fr;
   gap: 12px;
   padding: 12px 16px;
   align-items: center;
@@ -201,13 +201,32 @@
   white-space: nowrap;
 }
 
+/* Ticket codes are long and must stay fully visible - wrap instead of
+   truncating with an ellipsis. */
+.cell.wrap {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
 .cell.mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
 }
 
 .cell.small {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  overflow: visible;
+  white-space: normal;
 }
 
 .muted {
@@ -275,6 +294,29 @@
 .btn-danger:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: #374151;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f4f5f7;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mini-actions,
+.ticket-mini .mini-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
 }
 
 @media (max-width: 760px) {
