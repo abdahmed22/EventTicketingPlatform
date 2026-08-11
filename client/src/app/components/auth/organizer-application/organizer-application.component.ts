@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { email, form, FormField, FormRoot, minLength, required, validate } from '@angular/forms/signals';
+import { email, form, FormField, FormRoot, minLength, required, validate, pattern } from '@angular/forms/signals';
 import { OrganizerApplicationService } from '../../../services/organizer-application/organizer-application.service';
 import { ApiError } from '../../../models/api-error.model';
 import { OrganizerApplicationRequest } from '../../../models/organizer-application.model';
@@ -15,6 +15,8 @@ interface OrganizerApplicationFormValue {
   organizationName: string;
   reason: string;
 }
+
+const PHONE_PATTERN = /^\+?[0-9]{7,15}$/;
 
 @Component({
   selector: 'app-organizer-application',
@@ -49,6 +51,10 @@ export class OrganizerApplicationComponent {
       email(path.email, { message: 'Enter a valid email address' });
 
       required(path.phone, { message: 'Phone is required' });
+
+      pattern(path.phone, PHONE_PATTERN, {
+        message: 'Enter a valid phone number (7-15 digits, optionally starting with +)'
+      });
 
       required(path.password, { message: 'Password is required' });
       minLength(path.password, 8, { message: 'Password must be at least 8 characters' });
