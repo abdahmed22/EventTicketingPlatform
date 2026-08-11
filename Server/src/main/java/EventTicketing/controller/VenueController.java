@@ -41,8 +41,9 @@ public class VenueController {
     }
 
     @GetMapping("/organizer/venues")
-    public ResponseEntity<List<VenueDto.Response>> listMyVenues(@AuthenticationPrincipal User organizer) {
-        return ResponseEntity.ok(venueService.listMyVenues(organizer));
+    public ResponseEntity<List<VenueDto.Response>> listMyVenues(@AuthenticationPrincipal User organizer,
+                                                        @RequestParam(required = false) Venue.Status status) {
+        return ResponseEntity.ok(venueService.listMyVenues(organizer, status));
     }
 
     @GetMapping("/admin/venues")
@@ -69,6 +70,12 @@ public class VenueController {
                                                     @PathVariable UUID id,
                                                     @RequestBody(required = false) VenueDto.RejectRequest request) {
         return ResponseEntity.ok(venueService.reject(id, admin, request));
+    }
+
+    @DeleteMapping("/admin/venues/{id}")
+    public ResponseEntity<Void> adminDelete(@PathVariable UUID id) {
+        venueService.adminDelete(id);
+        return ResponseEntity.noContent().build();
     }
 
 }

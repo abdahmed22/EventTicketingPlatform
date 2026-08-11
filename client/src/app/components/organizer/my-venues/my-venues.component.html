@@ -46,7 +46,7 @@
         </div>
 
         <div class="form-field">
-          <label for="venueCapacity">Total Capacity * (> 0)</label>
+          <label for="venueCapacity">Total Capacity *</label>
           <input id="venueCapacity" type="number" [formField]="venueForm.capacity" />
           @if (venueForm.capacity().touched() && venueForm.capacity().invalid()) {
             @for (error of venueForm.capacity().errors(); track error) {

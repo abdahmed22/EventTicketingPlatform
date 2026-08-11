@@ -59,9 +59,9 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set(null);
 
-    this.bookingService.getMyBookings().subscribe({
+    this.bookingService.myBookings().subscribe({
 
-      next: (bookings) => {
+      next: (bookings: BookingResponse[]) => {
 
         this.bookings.set(bookings);
 
@@ -70,7 +70,7 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
         this.loading.set(false);
       },
 
-      error: (err) => {
+      error: (err: unknown) => {
 
         this.error.set(
           err instanceof ApiError
