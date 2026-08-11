@@ -128,6 +128,12 @@ export const routes: Routes = [
       import('./components/admin/venue-review/venue-review.component').then((m) => m.VenueReviewComponent)
   },
   {
+    path: 'admin/users',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./components/admin/admin-users/admin-users.component').then((m) => m.AdminUsersComponent)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

@@ -11,32 +11,32 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
-    // ديه للUser والadmin
+    // Get a single ticket by its primary-key UUID (used by admin & customer)
     @Query("SELECT t FROM Ticket t WHERE t.uuid = :uuid")
     Ticket getTicketByUUID(@Param("uuid") UUID uuid);
 
-    @Query("SELECT t FROM Ticket t WHERE t.evnt = :event_UUID")
-    List<Ticket> getEventTickets(@Param("event_uuid") UUID event_uuid);
+    // Fix: JPQL param name was :event_UUID (uppercase) but @Param said "event_uuid"
+    @Query("SELECT t FROM Ticket t WHERE t.evnt = :eventUuid")
+    List<Ticket> getEventTickets(@Param("eventUuid") UUID eventUuid);
 
     Ticket findByTicketCode(String ticketCode);
-    
-    @Query("SELECT t FROM Ticket t WHERE t.userOwnerUUID = :owner_id")
-    List<Ticket> getAllTicketsMadeByCustomer(@Param("owner_id") UUID owner_id);
 
-    // علشان يعمل insert بتستخدم الsave() fuction الي بيقدمها الJpaRepository
+    @Query("SELECT t FROM Ticket t WHERE t.userOwnerUUID = :ownerId")
+    List<Ticket> getAllTicketsMadeByCustomer(@Param("ownerId") UUID ownerId);
 
-    @Query("SELECT t FROM Ticket t WHERE t.ticketCode = :ticketCode AND t.userOwnerUUID = :owner")
-    Ticket getTicketByOwnerUUID(@Param("ticket_code") String ticketCode, @Param("owner_id") UUID owner);
+    // Fix: JPQL used :ticketCode and :owner but @Param said "ticket_code" and "owner_id"
+    @Query("SELECT t FROM Ticket t WHERE t.ticketCode = :ticketCode AND t.userOwnerUUID = :ownerId")
+    Ticket getTicketByOwnerUUID(@Param("ticketCode") String ticketCode, @Param("ownerId") UUID ownerId);
 
-    @Query("SELECT t FROM Ticket t WHERE t.ticketCode = :ticketCode AND t.evnt = :evnt")
-    Ticket getTicketForOrganizerForOneEvent(@Param("ticket_code") String ticketCode, @Param("owner_id") UUID evnt);
+    // Fix: JPQL used :ticketCode and :evnt but @Param said "ticket_code" and "owner_id"
+    @Query("SELECT t FROM Ticket t WHERE t.ticketCode = :ticketCode AND t.evnt = :eventUuid")
+    Ticket getTicketForOrganizerForOneEvent(@Param("ticketCode") String ticketCode, @Param("eventUuid") UUID eventUuid);
 
     @Modifying
     @Transactional
@@ -62,10 +62,13 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
                       @Param("totalPrice") BigDecimal totalPrice,
                       @Param("status") TicketStatus status);
 
+    // Fix: was comparing status = :newStatus in WHERE (no-op). Now accepts separate oldStatus / newStatus.
     @Modifying
-    @Query("UPDATE Ticket t SET t.status = :status WHERE t.bookingId = :bookingId AND t.status = :status")
+    @Transactional
+    @Query("UPDATE Ticket t SET t.status = :newStatus WHERE t.bookingId = :bookingId AND t.status = :oldStatus")
     Integer updateStatusByBookingId(@Param("bookingId") UUID bookingId,
-                                @Param("status") TicketStatus status);
+                                    @Param("oldStatus") TicketStatus oldStatus,
+                                    @Param("newStatus") TicketStatus newStatus);
 
-   boolean existsByTicketCode(String ticketCode);
+    boolean existsByTicketCode(String ticketCode);
 }
