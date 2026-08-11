@@ -41,7 +41,7 @@ public class OrganizerApplicationService {
                 .name(request.name())
                 .email(request.email())
                 .phone(request.phone())
-                .passwordHash(passwordEncoder.encode(request.password()))
+                .password(passwordEncoder.encode(request.password()))
                 .organizationName(request.organizationName())
                 .reason(request.reason())
                 .status(OrganizerApplicationStatus.PENDING)
@@ -68,7 +68,7 @@ public class OrganizerApplicationService {
                 .name(application.getName())
                 .email(application.getEmail())
                 .phone(application.getPhone())
-                .password(application.getPasswordHash())
+                .password(application.getPassword())
                 .role(UserRole.ORGANIZER)
                 .build();
         userRepository.save(organizer);

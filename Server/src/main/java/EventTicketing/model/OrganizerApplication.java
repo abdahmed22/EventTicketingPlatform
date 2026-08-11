@@ -45,11 +45,9 @@ public class OrganizerApplication {
     @Column(nullable = false)
     private String phone;
 
-    /** BCrypt hash, collected at application time so approval needs no second signup step. Never expose via DTO. */
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+    @Column(nullable = false)
+    private String password;
 
-    @Column(name = "organization_name")
     private String organizationName;
 
     @Column(columnDefinition = "TEXT")
@@ -69,7 +67,6 @@ public class OrganizerApplication {
     @JoinColumn(name = "reviewed_by")
     private User reviewedBy;
 
-    @Column(name = "rejection_reason")
     private String rejectionReason;
 
     @PrePersist
