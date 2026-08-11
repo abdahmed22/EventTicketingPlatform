@@ -7,6 +7,7 @@ import EventTicketing.model.User;
 import EventTicketing.service.EventService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,8 +29,8 @@ public class EventController {
     @GetMapping("/events")
     public ResponseEntity<PageResponse<EventDto.Summary>> browse(
             @RequestParam(required = false) Event.Category category,
-            @RequestParam(required = false) LocalDate dateFrom,
-            @RequestParam(required = false) LocalDate dateTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) UUID venueId,
@@ -99,8 +100,8 @@ public class EventController {
     public ResponseEntity<PageResponse<EventDto.Summary>> adminList(
             @RequestParam(required = false) Event.Status status,
             @RequestParam(required = false) Event.Category category,
-            @RequestParam(required = false) LocalDate dateFrom,
-            @RequestParam(required = false) LocalDate dateTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) UUID venueId,

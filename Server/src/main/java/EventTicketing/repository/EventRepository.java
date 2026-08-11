@@ -23,25 +23,25 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             SELECT DISTINCT e FROM Event e
             LEFT JOIN e.seatCategories sc
             WHERE e.status = :status
-                AND (:category IS NULL OR e.category = :category)
-                AND (:venueId IS NULL OR e.venue.id = :venueId)
-                AND (:organizerId IS NULL OR e.organizer.id = :organizerId)
-                AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom)
-                AND (:dateTo IS NULL OR e.eventDate <= :dateTo)
-                AND (:minPrice IS NULL OR sc.price >= :minPrice)
-                AND (:maxPrice IS NULL OR sc.price <= :maxPrice)
+                AND (cast(:category as string) IS NULL OR e.category = :category)
+                AND (cast(:venueId as java.util.UUID) IS NULL OR e.venue.id = :venueId)
+                AND (cast(:organizerId as java.util.UUID) IS NULL OR e.organizer.id = :organizerId)
+                AND (cast(:dateFrom as java.time.LocalDate) IS NULL OR e.eventDate >= :dateFrom)
+                AND (cast(:dateTo as java.time.LocalDate) IS NULL OR e.eventDate <= :dateTo)
+                AND (cast(:minPrice as java.math.BigDecimal) IS NULL OR sc.price >= :minPrice)
+                AND (cast(:maxPrice as java.math.BigDecimal) IS NULL OR sc.price <= :maxPrice)
             """,
             countQuery = """
             SELECT COUNT(DISTINCT e.id) FROM Event e
             LEFT JOIN e.seatCategories sc
             WHERE e.status = :status
-                AND (:category IS NULL OR e.category = :category)
-                AND (:venueId IS NULL OR e.venue.id = :venueId)
-                AND (:organizerId IS NULL OR e.organizer.id = :organizerId)
-                AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom)
-                AND (:dateTo IS NULL OR e.eventDate <= :dateTo)
-                AND (:minPrice IS NULL OR sc.price >= :minPrice)
-                AND (:maxPrice IS NULL OR sc.price <= :maxPrice)
+                AND (cast(:category as string) IS NULL OR e.category = :category)
+                AND (cast(:venueId as java.util.UUID) IS NULL OR e.venue.id = :venueId)
+                AND (cast(:organizerId as java.util.UUID) IS NULL OR e.organizer.id = :organizerId)
+                AND (cast(:dateFrom as java.time.LocalDate) IS NULL OR e.eventDate >= :dateFrom)
+                AND (cast(:dateTo as java.time.LocalDate) IS NULL OR e.eventDate <= :dateTo)
+                AND (cast(:minPrice as java.math.BigDecimal) IS NULL OR sc.price >= :minPrice)
+                AND (cast(:maxPrice as java.math.BigDecimal) IS NULL OR sc.price <= :maxPrice)
             """)
     Page<Event> findFilteredPublished(
             @Param("status") Status status,
@@ -59,26 +59,26 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
     @Query(value = """
             SELECT DISTINCT e FROM Event e
             LEFT JOIN e.seatCategories sc
-            WHERE (:status IS NULL OR e.status = :status)
-                AND (:category IS NULL OR e.category = :category)
-                AND (:venueId IS NULL OR e.venue.id = :venueId)
-                AND (:organizerId IS NULL OR e.organizer.id = :organizerId)
-                AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom)
-                AND (:dateTo IS NULL OR e.eventDate <= :dateTo)
-                AND (:minPrice IS NULL OR sc.price >= :minPrice)
-                AND (:maxPrice IS NULL OR sc.price <= :maxPrice)
+            WHERE (cast(:status as string) IS NULL OR e.status = :status)
+                AND (cast(:category as string) IS NULL OR e.category = :category)
+                AND (cast(:venueId as java.util.UUID) IS NULL OR e.venue.id = :venueId)
+                AND (cast(:organizerId as java.util.UUID) IS NULL OR e.organizer.id = :organizerId)
+                AND (cast(:dateFrom as java.time.LocalDate) IS NULL OR e.eventDate >= :dateFrom)
+                AND (cast(:dateTo as java.time.LocalDate) IS NULL OR e.eventDate <= :dateTo)
+                AND (cast(:minPrice as java.math.BigDecimal) IS NULL OR sc.price >= :minPrice)
+                AND (cast(:maxPrice as java.math.BigDecimal) IS NULL OR sc.price <= :maxPrice)
             """,
             countQuery = """
             SELECT COUNT(DISTINCT e.id) FROM Event e
             LEFT JOIN e.seatCategories sc
-            WHERE (:status IS NULL OR e.status = :status)
-                AND (:category IS NULL OR e.category = :category)
-                AND (:venueId IS NULL OR e.venue.id = :venueId)
-                AND (:organizerId IS NULL OR e.organizer.id = :organizerId)
-                AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom)
-                AND (:dateTo IS NULL OR e.eventDate <= :dateTo)
-                AND (:minPrice IS NULL OR sc.price >= :minPrice)
-                AND (:maxPrice IS NULL OR sc.price <= :maxPrice)
+            WHERE (cast(:status as string) IS NULL OR e.status = :status)
+                AND (cast(:category as string) IS NULL OR e.category = :category)
+                AND (cast(:venueId as java.util.UUID) IS NULL OR e.venue.id = :venueId)
+                AND (cast(:organizerId as java.util.UUID) IS NULL OR e.organizer.id = :organizerId)
+                AND (cast(:dateFrom as java.time.LocalDate) IS NULL OR e.eventDate >= :dateFrom)
+                AND (cast(:dateTo as java.time.LocalDate) IS NULL OR e.eventDate <= :dateTo)
+                AND (cast(:minPrice as java.math.BigDecimal) IS NULL OR sc.price >= :minPrice)
+                AND (cast(:maxPrice as java.math.BigDecimal) IS NULL OR sc.price <= :maxPrice)
             """)
     Page<Event> findFilteredForAdmin(
             @Param("status") Status status,

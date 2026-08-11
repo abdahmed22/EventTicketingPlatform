@@ -75,6 +75,9 @@ public class EventService {
             BigDecimal maxPrice,
             int page,
             int size) {
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            throw new IllegalArgumentException("Start date (Date From) cannot be after end date (Date To).");
+        }
         Pageable pageable = PageRequest.of(page, size);
         Page<Event> publishedPage = eventRepository.findFilteredPublished(
                 Event.Status.PUBLISHED,
@@ -203,6 +206,9 @@ public class EventService {
             BigDecimal maxPrice,
             int page,
             int size) {
+        if (dateFrom != null && dateTo != null && dateFrom.isAfter(dateTo)) {
+            throw new IllegalArgumentException("Start date (Date From) cannot be after end date (Date To).");
+        }
         Pageable pageable = PageRequest.of(page, size);
         Page<Event> results = eventRepository.findFilteredForAdmin(
                 status, category, venueId, organizerId, dateFrom, dateTo, minPrice, maxPrice, pageable);
