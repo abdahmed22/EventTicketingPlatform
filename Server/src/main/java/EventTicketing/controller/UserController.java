@@ -19,7 +19,6 @@ public class UserController {
 
     private final UserService userService;
 
-    /** List all users, optionally filtered by role. */
     @GetMapping
     public ResponseEntity<List<UserDto.Response>> listUsers(
             @RequestParam(required = false) UserRole role) {
@@ -29,13 +28,11 @@ public class UserController {
         return ResponseEntity.ok(userService.listAll());
     }
 
-    /** Get a single user by UUID. */
     @GetMapping("/{id}")
     public ResponseEntity<UserDto.Response> getUser(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.getById(id));
     }
 
-    /** Change a user's role (CUSTOMER ↔ ORGANIZER ↔ ADMIN). */
     @PatchMapping("/{id}/role")
     public ResponseEntity<UserDto.Response> changeRole(
             @PathVariable UUID id,
@@ -44,7 +41,6 @@ public class UserController {
         return ResponseEntity.ok(userService.changeRole(id, request.role(), admin));
     }
 
-    /** Delete a user account (non-admin accounts only). */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(
             @PathVariable UUID id,
