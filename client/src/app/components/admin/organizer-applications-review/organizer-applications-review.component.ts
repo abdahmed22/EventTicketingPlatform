@@ -16,7 +16,7 @@ type StatusFilter = OrganizerApplicationStatus | 'ALL';
 export class OrganizerApplicationsReviewComponent {
   private readonly organizerApplicationService = inject(OrganizerApplicationService);
 
-  readonly statusOptions: StatusFilter[] = ['PENDING', 'APPROVED', 'REJECTED', 'ALL'];
+  readonly statusOptions: StatusFilter[] = ['ALL', 'PENDING', 'APPROVED', 'REJECTED'];
 
   readonly applications = signal<OrganizerApplicationResponse[]>([]);
   readonly loading = signal(false);

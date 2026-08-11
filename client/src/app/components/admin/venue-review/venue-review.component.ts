@@ -16,7 +16,7 @@ type StatusFilter = VenueStatus | 'ALL';
 export class VenueReviewComponent {
   private readonly venueService = inject(VenueService);
 
-  readonly statusOptions: StatusFilter[] = ['PENDING', 'APPROVED', 'REJECTED', 'ALL'];
+  readonly statusOptions: StatusFilter[] = ['ALL', 'PENDING', 'APPROVED', 'REJECTED'];
 
   readonly venues = signal<VenueResponse[]>([]);
   readonly loading = signal(false);
