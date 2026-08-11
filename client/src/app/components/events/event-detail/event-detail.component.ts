@@ -1,3 +1,11 @@
+// ─── Person 2 Component: event-detail.component.ts ───────────────────────────
+// Route: '/events/:id'
+// Shared between all roles. Behaviour changes per role:
+//   - Public / Customer — view-only info + booking widget (PUBLISHED events only)
+//   - Organizer / Admin — management actions (publish, cancel, add seat category)
+//                         + attendee / bookings panel
+// Uses ActivatedRoute to read the event :id param from the URL.
+// ──────────────────────────────────────────────────────────────────────────────
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, CurrencyPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -15,12 +23,33 @@ import { BookingResponse } from '../../../models/booking.model';
 import { ApiError } from '../../../models/api-error.model';
 import { getEventCategoryImage } from '../../../utils/event-image.util';
 
+/** Shape of the reactive model backing the "Add Seat Category" Signal Form */
 interface SeatCategoryFormValue {
   name: string;
   price: number;
   totalSeats: number;
   seatingCapacity: number;
 }
+
+/**
+ * Person 2 Component: EventDetailComponent
+ *
+ * Renders a single event's full detail. The component is role-aware:
+ *
+ *  Customer view (PUBLISHED event):
+ *    - Hero image, description, venue card, seat category ticket options
+ *    - Booking widget: seat-category dropdown + quantity stepper + Reserve button
+ *      (the actual POST /api/customer/bookings is delegated to BookingService,
+ *       Person 3's concern — this component just calls bookingService.reserve())
+ *
+ *  Organizer / Admin view (any status):
+ *    - Status pill, management actions bar (Publish, Cancel, Add Seat Category)
+ *    - Collapsible attendees/bookings panel
+ *    - "Add Seat Category" modal (Signal Form — posts to SeatCategoryService)
+ *
+ * The correct EventService method (public / organizer / admin) is chosen
+ * based on authService role inside loadEvent().
+ */
 
 @Component({
   selector: 'app-event-detail',
@@ -30,9 +59,15 @@ interface SeatCategoryFormValue {
   styleUrl: './event-detail.component.css'
 })
 export class EventDetailComponent {
+  // Expose Math/Number to the template (Angular templates can't call globals directly)
   readonly Number = Number;
   readonly Math = Math;
 
+  /**
+   * Calculates the maximum tickets a customer can add to their order
+   * for the given seat category. Respects seatingCapacity (multi-person seats)
+   * and availableSeats (live count from the server).
+   */
   getMaxQuantity(cat: SeatCategorySummary | null): number {
     if (!cat) return 1;
     if (cat.seatingCapacity && cat.seatingCapacity > 0) {
@@ -46,24 +81,30 @@ export class EventDetailComponent {
   private readonly eventService = inject(EventService);
   private readonly seatCategoryService = inject(SeatCategoryService);
   private readonly bookingService = inject(BookingService);
-  readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService); // public so the template can check role
 
-  readonly event = signal<EventResponse | null>(null);
-  readonly loading = signal(true);
-  readonly error = signal<string | null>(null);
-  readonly actionSuccess = signal<string | null>(null);
+  // ─ Core data signals ───────────────────────────────────────────────
+  readonly event = signal<EventResponse | null>(null);     // the loaded event
+  readonly loading = signal(true);                          // true while fetching
+  readonly error = signal<string | null>(null);             // error banner message
+  readonly actionSuccess = signal<string | null>(null);     // success banner message
 
-  // Organizer/Admin: bookings panel
-  readonly bookings = signal<BookingResponse[]>([]);
+  // ─ Organizer/Admin: bookings panel ───────────────────────────────────
+  readonly bookings = signal<BookingResponse[]>([]);        // attendees list
   readonly bookingsLoading = signal(false);
   readonly bookingsError = signal<string | null>(null);
-  readonly showBookings = signal(false);
+  readonly showBookings = signal(false);                    // toggles the panel visibility
 
-  // Booking Reservation State
-  readonly selectedSeatCategoryId = signal<string>('');
-  readonly quantity = signal<number>(1);
-  readonly reserving = signal<boolean>(false);
+  // ─ Customer: booking widget state ─────────────────────────────────
+  readonly selectedSeatCategoryId = signal<string>('');    // which category the customer picked
+  readonly quantity = signal<number>(1);                    // how many tickets they want
+  readonly reserving = signal<boolean>(false);              // true while reserve() HTTP call is in-flight
 
+  /**
+   * Derived: resolves the selected seat category object from the event's
+   * seatCategories array. Used by the template for price calculation and
+   * availability badge display.
+   */
   readonly selectedCategory = computed(() => {
     const categoryId = this.selectedSeatCategoryId();
     const evt = this.event();
@@ -71,10 +112,14 @@ export class EventDetailComponent {
     return evt.seatCategories.find((cat) => cat.id === categoryId) || null;
   });
 
-  // Organizer seat category modal state
-  readonly showSeatModal = signal(false);
-  readonly submittingCategory = signal(false);
+  // ─ Organizer: "Add Seat Category" modal state ────────────────────────
+  readonly showSeatModal = signal(false);         // controls modal visibility
+  readonly submittingCategory = signal(false);     // true while the form is being submitted
 
+  /**
+   * Reactive model backing the seat category Signal Form.
+   * Reset to defaults each time the modal is closed.
+   */
   private readonly seatModel = signal<SeatCategoryFormValue>({
     name: '',
     price: 50,
@@ -82,6 +127,11 @@ export class EventDetailComponent {
     seatingCapacity: 1
   });
 
+  /**
+   * Angular Signal Form for the "Add Seat Category" modal.
+   * Validators run reactively on each field. On submit, calls
+   * SeatCategoryService.create() then reloads the event to show the new category.
+   */
   readonly seatForm = form(
     this.seatModel,
     (path) => {
@@ -107,10 +157,11 @@ export class EventDetailComponent {
               totalSeats: val.totalSeats,
               seatingCapacity: val.seatingCapacity
             };
+            // POST /api/organizer/events/{id}/seat-categories
             await firstValueFrom(this.seatCategoryService.create(evt.id, req));
             this.showSeatModal.set(false);
             this.actionSuccess.set('Seat category added successfully!');
-            this.loadEvent(evt.id);
+            this.loadEvent(evt.id); // refresh so new category appears in the ticket options grid
             return;
           } catch (err) {
             const msg = err instanceof ApiError ? err.message : 'Failed to create seat category.';
@@ -124,6 +175,7 @@ export class EventDetailComponent {
   );
 
   constructor() {
+    // Read the ':id' route param and kick off the event fetch
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadEvent(id);
@@ -133,6 +185,14 @@ export class EventDetailComponent {
     }
   }
 
+  /**
+   * Fetches the event by ID.
+   * Uses the appropriate endpoint based on the user's role:
+   *   - Admin    → GET /api/admin/events/{id}     (sees all statuses)
+   *   - Organizer → GET /api/organizer/events/{id} (sees own events in all statuses)
+   *   - Public   → GET /api/events/{id}           (only PUBLISHED events)
+   * Auto-selects the first seat category in the booking widget after load.
+   */
   loadEvent(id: string): void {
     this.loading.set(true);
     this.error.set(null);
@@ -146,6 +206,7 @@ export class EventDetailComponent {
     fetch$.subscribe({
       next: (res) => {
         this.event.set(res);
+        // Auto-select first seat category for the booking widget
         if (res.seatCategories && res.seatCategories.length > 0 && !this.selectedSeatCategoryId()) {
           this.selectedSeatCategoryId.set(res.seatCategories[0].id);
         }
@@ -158,17 +219,25 @@ export class EventDetailComponent {
     });
   }
 
+  /** Called when the customer changes the seat-category dropdown. Resets quantity to 1. */
   onSeatCategoryChange(categoryId: string): void {
     this.selectedSeatCategoryId.set(categoryId);
     this.quantity.set(1);
     this.error.set(null);
   }
 
+  /** Called when the customer clicks the +/- quantity stepper. */
   onQuantityChange(qty: number): void {
     this.quantity.set(qty);
     this.error.set(null);
   }
 
+  /**
+   * Client-side guard run before calling BookingService.reserve().
+   * Validates: category selected, quantity >= 1, seats available,
+   * quantity <= availableSeats, quantity <= seatingCapacity limit.
+   * Returns false and sets the error signal if any check fails.
+   */
   private isReservationValid(): boolean {
     const categoryId = this.selectedSeatCategoryId();
     const qty = this.quantity();
@@ -207,6 +276,14 @@ export class EventDetailComponent {
     return true;
   }
 
+  /**
+   * Submits the seat reservation.
+   * Validates client-side first (isReservationValid), then calls
+   * BookingService.reserve() which POSTs to /api/customer/bookings.
+   * On success: navigates to /bookings (Person 3's view).
+   * On 409 conflict: a concurrent booking took the last seat — reload
+   *   the event so the UI reflects the updated availableSeats count.
+   */
   reserve(): void {
     if (!this.isReservationValid()) {
       return;
@@ -227,22 +304,28 @@ export class EventDetailComponent {
       .subscribe({
         next: () => {
           this.reserving.set(false);
-          this.router.navigate(['/bookings']);
+          this.router.navigate(['/bookings']); // redirect to Person 3's my-bookings page
         },
         error: (err) => {
           if (err instanceof ApiError && err.status === 409) {
+            // Seat conflict — someone else took the seat(s) at the same time
             this.error.set(
               'The selected seats are no longer available. Available seat counts have been updated. Please select another quantity or seat category.'
             );
           } else {
             this.error.set(err instanceof ApiError ? err.message : 'Failed to reserve seats');
           }
-          this.loadEvent(evt.id);
+          this.loadEvent(evt.id); // refresh live availableSeats after conflict
           this.reserving.set(false);
         }
       });
   }
 
+  /**
+   * Publishes the event (DRAFT → PUBLISHED).
+   * POST /api/organizer/events/{id}/publish
+   * Backend validates: ≥1 seat category with totalSeats>0, future dateTime.
+   */
   publishEvent(): void {
     const evt = this.event();
     if (!evt) return;
@@ -261,6 +344,11 @@ export class EventDetailComponent {
     });
   }
 
+  /**
+   * Cancels the event (→ CANCELLED) with a confirmation dialog.
+   * Admin uses adminCancel(), organizer uses organizerCancel().
+   * The backend cascade-cancels all PENDING/CONFIRMED bookings.
+   */
   cancelEvent(): void {
     const evt = this.event();
     if (!evt) return;
@@ -270,6 +358,7 @@ export class EventDetailComponent {
     }
 
     this.loading.set(true);
+    // Admin can cancel any event; organizer only their own (enforced server-side too)
     const cancel$ = this.authService.isAdmin()
       ? this.eventService.adminCancel(evt.id)
       : this.eventService.organizerCancel(evt.id);
@@ -287,19 +376,30 @@ export class EventDetailComponent {
     });
   }
 
+  /** Opens the "Add Seat Category" modal. */
   openSeatModal(): void {
     this.showSeatModal.set(true);
   }
 
+  /** Closes the "Add Seat Category" modal. */
   closeSeatModal(): void {
     this.showSeatModal.set(false);
   }
 
+  /**
+   * Returns the % of seats still available for a given category.
+   * Used to set the width of the progress bar in the ticket options grid.
+   */
   getAvailabilityPercent(sc: SeatCategorySummary): number {
     if (!sc.totalSeats) return 0;
     return Math.round((sc.availableSeats / sc.totalSeats) * 100);
   }
 
+  /**
+   * Toggles the attendees/bookings panel for organizer/admin.
+   * Lazy-loads bookings on first open (avoids an unnecessary API call
+   * when the organizer doesn't need to see attendees).
+   */
   toggleBookingsPanel(): void {
     const evt = this.event();
     if (!evt) return;
@@ -308,11 +408,17 @@ export class EventDetailComponent {
       return;
     }
     this.showBookings.set(true);
+    // Only fetch if we haven't loaded them yet
     if (this.bookings().length === 0) {
       this.loadEventBookings(evt.id);
     }
   }
 
+  /**
+   * Fetches all bookings for this event.
+   * Organizer: GET /api/organizer/events/{id}/bookings
+   * Admin:     GET /api/admin/bookings (filtered by eventId, handled by BookingService)
+   */
   loadEventBookings(eventId: string): void {
     this.bookingsLoading.set(true);
     this.bookingsError.set(null);
@@ -328,10 +434,12 @@ export class EventDetailComponent {
     });
   }
 
+  /** Maps an EventCategory to its hero image path (used in the hero banner). */
   getCategoryImage(category: EventCategory): string {
     return getEventCategoryImage(category);
   }
 
+  /** Hides broken <img> elements gracefully. */
   onImageError(event: Event): void {
     const target = event.target as HTMLImageElement;
     if (target) {
