@@ -14,10 +14,12 @@ import EventTicketing.repository.BookingRepository;
 import EventTicketing.repository.EventRepository;
 import EventTicketing.repository.SeatCategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -30,6 +32,9 @@ public class BookingService {
   private final BookingRepository bookingRepository;
   private final EventRepository eventRepository;
   private final SeatCategoryRepository seatCategoryRepository;
+  // @Lazy breaks the circular dependency: BookingService <-> TicketService
+  @Lazy
+  private final TicketService ticketService;
 
   @Transactional
   public void updateAvailableSeats(
@@ -168,6 +173,19 @@ public class BookingService {
 
     Booking savedBooking =
         bookingRepository.save(booking);
+
+    // Generate one ticket per seat quantity now that the booking is confirmed
+    BigDecimal perTicketPrice = savedBooking.getTotalPrice()
+        .divide(BigDecimal.valueOf(savedBooking.getQuantity()), 2, RoundingMode.HALF_UP);
+    for (int i = 0; i < savedBooking.getQuantity(); i++) {
+      ticketService.generateTicket(
+          savedBooking.getId(),
+          savedBooking.getSeatCategory().getId(),
+          savedBooking.getEvent().getId(),
+          savedBooking.getEvent().getVenueId(),
+          savedBooking.getUser().getId(),
+          perTicketPrice);
+    }
 
     return BookingDto.Response.from(
         savedBooking);

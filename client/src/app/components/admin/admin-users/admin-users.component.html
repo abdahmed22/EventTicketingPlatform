@@ -1,0 +1,69 @@
+<div class="page-container">
+  <header class="page-header">
+    <div>
+      <h1>User Management</h1>
+      <p class="subtitle">View all registered users and manage their roles across the platform.</p>
+    </div>
+  </header>
+
+  <div class="filter-tabs">
+    @for (option of roleOptions; track option) {
+      <button
+        type="button"
+        class="filter-tab"
+        [class.active]="roleFilter() === option"
+        (click)="setFilter(option)"
+      >
+        {{ option }}
+      </button>
+    }
+  </div>
+
+  @if (success()) {
+    <div class="banner banner-success">{{ success() }}</div>
+  }
+  @if (error()) {
+    <div class="banner banner-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-box">Loading users...</div>
+  } @else if (users().length === 0) {
+    <div class="empty-state">No users match this filter.</div>
+  } @else {
+    <div class="table card">
+      <div class="row head">
+        <span>User</span>
+        <span>Phone</span>
+        <span>Role</span>
+        <span>Joined</span>
+        <span>Actions</span>
+      </div>
+
+      @for (user of users(); track user.id) {
+        <div class="row">
+          <span class="cell-main">
+            <span class="cell-title">{{ user.name }}</span>
+            <span class="cell-sub mono">{{ user.email }}</span>
+          </span>
+          <span class="cell">{{ user.phone ?? '—' }}</span>
+          <span class="cell">
+            <span class="role-badge" [class]="'role-' + user.role.toLowerCase()">{{ user.role }}</span>
+          </span>
+          <span class="cell">{{ user.createdAt | date: 'mediumDate' }}</span>
+          <span class="cell actions">
+            @if (user.role === 'CUSTOMER') {
+              <button type="button" class="btn btn-promote" (click)="promoteToOrganizer(user)">→ Organizer</button>
+            }
+            @if (user.role === 'ORGANIZER') {
+              <button type="button" class="btn btn-ghost" (click)="demoteToCustomer(user)">→ Customer</button>
+            }
+            @if (user.role !== 'ADMIN') {
+              <button type="button" class="btn btn-danger" (click)="deleteUser(user)">Delete</button>
+            }
+          </span>
+        </div>
+      }
+    </div>
+  }
+</div>

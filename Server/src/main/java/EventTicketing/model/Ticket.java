@@ -10,9 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
-import java.sql.Time;
 import java.time.Instant;
-import java.util.Date;
 import java.util.UUID;
 
 @Table(name = "tickets")
@@ -34,25 +32,28 @@ public class Ticket {
     @Column(name = "creation_date")
     private Instant createdAt;
 
-    @JoinColumn(name = "booking_id", nullable = false)
+    @Column(name = "booking_id", nullable = false)
     private UUID bookingId;
 
-    @JoinColumn(name = "seat", nullable = false)
+    @Column(name = "seat", nullable = false)
     private UUID seat;
-    
-    @JoinColumn(name = "evnt", nullable = false)
+
+    @Column(name = "evnt", nullable = false)
     private UUID evnt;
-    @JoinColumn(name = "venue", nullable = false)
+
+    @Column(name = "venue", nullable = false)
     private UUID venue;
-    @JoinColumn(name = "userOwnerUUID", nullable = false)
+
+    @Column(name = "user_owner_uuid", nullable = false)
     private UUID userOwnerUUID;
 
     @Column(name = "total_price")
     private BigDecimal totalPrice;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private TicketStatus status;
-    
+
     @Column(name = "checked_in_at")
     private Instant checkedInAt;
 
@@ -62,5 +63,5 @@ public class Ticket {
         if (this.status == null)
             this.status = TicketStatus.ISSUED;
     }
-    
+
 }

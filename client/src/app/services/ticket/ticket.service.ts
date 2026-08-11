@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -14,10 +14,9 @@ export class TicketService {
   private readonly apiUrl = environment.apiUrl;
 
   // Customer: list all of the logged-in customer's tickets across events.
-  // Backend route: GET /api/tickets/customer/{customer}?customer={customer}
+  // Backend route: GET /api/tickets/customer/{customerId}
   listCustomerTickets(customerId: string): Observable<CustomerTicket[]> {
-    const params = new HttpParams().set('customer', customerId);
-    return this.http.get<CustomerTicket[]>(`${this.apiUrl}/tickets/customer/${customerId}`, { params });
+    return this.http.get<CustomerTicket[]>(`${this.apiUrl}/tickets/customer/${customerId}`);
   }
 
   // Organizer: list tickets issued for one of the organizer's own events.

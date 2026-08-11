@@ -11,14 +11,13 @@ databaseChangeLog:
       changes:
         - createTable:
             tableName: ticket_attendee
-            remarks: Links tickets to customers/attendees - TicketAttendee entity
+            remarks: Links tickets to customers/attendees
             columns:
               - column:
                   name: uuid
                   type: UUID
-                  # CHAR(36) for MySQL / H2, UUID for PostgreSQL
                   autoIncrement: false
-                  remarks: PK - generated via @GeneratedValue(strategy = GenerationType.UUID)
+                  remarks: PK
                   constraints:
                     primaryKey: true
                     primaryKeyName: pk_ticket_attendee
@@ -27,19 +26,17 @@ databaseChangeLog:
               - column:
                   name: ticket_id
                   type: UUID
-                  remarks: Field ticketId - @Column+@JoinColumn(name="ticket_id") - FK to tickets.uuid
+                  remarks: FK to tickets.uuid
                   constraints:
                     nullable: false
 
               - column:
                   name: customer_id
                   type: UUID
-                  remarks: Field customerId - @Column+@JoinColumn(name="customer_id") - FK to customers/users
+                  remarks: FK to users.id
                   constraints:
                     nullable: false
 
-        # Foreign keys - adjust referencedTableName to your actual schema
-        # FK to tickets (created in 007-create-ticket-table)
         - addForeignKeyConstraint:
             baseTableName: ticket_attendee
             baseColumnNames: ticket_id
@@ -48,20 +45,16 @@ databaseChangeLog:
             referencedColumnNames: uuid
             onDelete: CASCADE
             onUpdate: CASCADE
-            deferrable: false
 
-        # FK to customer/user table - change if your table is named 'users' or 'customers'
         - addForeignKeyConstraint:
             baseTableName: ticket_attendee
             baseColumnNames: customer_id
             constraintName: fk_ticket_attendee_customer_id
-            referencedTableName: customers
-            referencedColumnNames: uuid
+            referencedTableName: users
+            referencedColumnNames: id
             onDelete: RESTRICT
             onUpdate: CASCADE
-            # If you use 'users' table: referencedTableName: users
 
-        # Indexes
         - createIndex:
             tableName: ticket_attendee
             indexName: idx_ticket_attendee_ticket_id
@@ -75,13 +68,6 @@ databaseChangeLog:
             columns:
               - column:
                   name: customer_id
-
-        # Optional: prevent duplicate assignment of same customer to same ticket
-        # Uncomment if business rule is 1 attendee per ticket/customer
-        # - addUniqueConstraint:
-        #     tableName: ticket_attendee
-        #     columnNames: ticket_id, customer_id
-        #     constraintName: uq_ticket_attendee_ticket_customer
 
       rollback:
         - dropTable:
