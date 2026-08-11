@@ -7,6 +7,7 @@ import EventTicketing.exception.ResourceNotFoundException;
 import EventTicketing.model.User;
 import EventTicketing.model.Venue;
 import EventTicketing.model.enums.UserRole;
+import EventTicketing.repository.EventRepository;
 import EventTicketing.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class VenueService {
 
     private final VenueRepository venueRepository;
+    private final EventRepository eventRepository;
 
     @Transactional
     public VenueDto.Response submit(User organizer, VenueDto.CreateRequest request) {
@@ -35,8 +37,11 @@ public class VenueService {
         return VenueDto.Response.from(venueRepository.save(venue));
     }
 
-    public List<VenueDto.Response> listMyVenues(User organizer) {
-        return venueRepository.findByRequestedBy(organizer).stream()
+    public List<VenueDto.Response> listMyVenues(User organizer, Venue.Status status) {
+        List<Venue> venues = status != null
+                ? venueRepository.findByStatus(status)
+                : venueRepository.findByRequestedBy(organizer);
+        return venues.stream()
                 .map(VenueDto.Response::from)
                 .toList();
     }
@@ -90,6 +95,15 @@ public class VenueService {
     }
 
     
+    @Transactional
+    public void adminDelete(UUID venueId) {
+        Venue venue = getVenue(venueId);
+        if (eventRepository.existsByVenueId(venueId)) {
+            throw new ForbiddenActionException("Cannot delete venue: it is linked to one or more events.");
+        }
+        venueRepository.delete(venue);
+    }
+
     private Venue getVenue(UUID venueId) {
         return venueRepository.findById(venueId)
                 .orElseThrow(() -> new ResourceNotFoundException("Venue not found with id: " + venueId));

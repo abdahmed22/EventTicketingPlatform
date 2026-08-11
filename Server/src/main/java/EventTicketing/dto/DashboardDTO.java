@@ -6,8 +6,6 @@ import java.util.UUID;
 
 public abstract class DashboardDTO {
 
-public class DashboardDTO {
-
     public record PendingOrganizerApplication(
             UUID id,
             String name,
@@ -15,17 +13,16 @@ public class DashboardDTO {
             String phone,
             String organizationName,
             String reason,
-            Instant submittedAt,
-            Instant submittedAt,
-    ) {}
+            Instant submittedAt) {
+    }
 
     public record PendingVenue(
             UUID id,
             String name,
             String address,
             Integer capacity,
-            UUID submittedById,
-            String submittedByName) {
+            UUID requestedById,
+            String requestedByName) {
     }
 
     public record Summary(
@@ -33,14 +30,5 @@ public class DashboardDTO {
             List<PendingOrganizerApplication> organizerApplications,
             int pendingVenueRequests,
             List<PendingVenue> venueRequests) {
-            UUID requestedById,
-            String requestedByName
-    ) {}
-
-    public record Summary(
-            int pendingOrganizerApplicationsCount,
-            List<PendingOrganizerApplication> pendingOrganizerApplications,
-            int pendingVenuesCount,
-            List<PendingVenue> pendingVenues
-    ) {}
+    }
 }
