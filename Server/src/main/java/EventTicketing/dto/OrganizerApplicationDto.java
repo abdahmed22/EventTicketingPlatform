@@ -4,12 +4,15 @@ import EventTicketing.model.OrganizerApplication;
 import EventTicketing.model.enums.OrganizerApplicationStatus;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.time.Instant;
 import java.util.UUID;
 
 public abstract class OrganizerApplicationDto {
+
+    private static final String PHONE_REGEX = "^\\+?[0-9]{7,15}$";
 
     public record SubmitRequest(
             @NotBlank(message = "Name is required")
@@ -20,6 +23,7 @@ public abstract class OrganizerApplicationDto {
             String email,
 
             @NotBlank(message = "Phone is required")
+            @Pattern(regexp = PHONE_REGEX, message = "Enter a valid phone number (7-15 digits, optionally starting with +)")
             String phone,
 
             @NotBlank(message = "Password is required")

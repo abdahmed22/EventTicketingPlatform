@@ -51,8 +51,11 @@ public class OrganizerApplicationService {
     }
 
     public List<OrganizerApplicationDto.Response> list(OrganizerApplicationStatus status) {
-        OrganizerApplicationStatus effectiveStatus = status != null ? status : OrganizerApplicationStatus.PENDING;
-        return organizerApplicationRepository.findByStatus(effectiveStatus).stream()
+        List<OrganizerApplication> applications = status != null
+                ? organizerApplicationRepository.findByStatus(status)
+                : organizerApplicationRepository.findAll();
+
+        return applications.stream()
                 .map(OrganizerApplicationDto.Response::from)
                 .toList();
     }

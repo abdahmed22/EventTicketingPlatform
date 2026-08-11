@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { guestGuard } from './guards/guest.guard';
-import { adminGuard, customerGuard, organizerGuard } from './guards/auth.guard';
+import { adminGuard, customerGuard, organizerGuard, organizerOrAdminGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -43,25 +43,25 @@ export const routes: Routes = [
   },
   {
     path: 'organizer/events',
-    canActivate: [organizerGuard],
+    canActivate: [organizerOrAdminGuard],
     loadComponent: () =>
       import('./components/organizer/my-events/my-events.component').then((m) => m.MyEventsComponent)
   },
   {
     path: 'organizer/events/new',
-    canActivate: [organizerGuard],
+    canActivate: [organizerOrAdminGuard],
     loadComponent: () =>
       import('./components/organizer/event-form/event-form.component').then((m) => m.EventFormComponent)
   },
   {
     path: 'organizer/events/:id/edit',
-    canActivate: [organizerGuard],
+    canActivate: [organizerOrAdminGuard],
     loadComponent: () =>
       import('./components/organizer/event-form/event-form.component').then((m) => m.EventFormComponent)
   },
   {
     path: 'organizer/venues',
-    canActivate: [organizerGuard],
+    canActivate: [organizerOrAdminGuard],
     loadComponent: () =>
       import('./components/organizer/my-venues/my-venues.component').then((m) => m.MyVenuesComponent)
   },

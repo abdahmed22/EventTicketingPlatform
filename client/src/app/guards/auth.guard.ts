@@ -37,3 +37,4 @@ export function roleGuard(...allowedRoles: UserRole[]): CanActivateFn {
 export const customerGuard: CanActivateFn = roleGuard('CUSTOMER');
 export const organizerGuard: CanActivateFn = roleGuard('ORGANIZER');
 export const adminGuard: CanActivateFn = roleGuard('ADMIN');
+export const organizerOrAdminGuard: CanActivateFn = roleGuard('ORGANIZER', 'ADMIN');

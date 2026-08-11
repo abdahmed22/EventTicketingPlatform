@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { email, form, FormField, FormRoot, minLength, required, validate } from '@angular/forms/signals';
+import { email, form, FormField, FormRoot, minLength, pattern, required, validate } from '@angular/forms/signals';
 import { AuthService } from '../../../services/auth/auth.service';
 import { ApiError } from '../../../models/api-error.model';
 import { RegisterRequest } from '../../../models/auth.model';
@@ -13,6 +13,8 @@ interface RegisterFormValue {
   password: string;
   confirmPassword: string;
 }
+
+const PHONE_PATTERN = /^\+?[0-9]{7,15}$/;
 
 @Component({
   selector: 'app-register',
@@ -40,6 +42,10 @@ export class RegisterComponent {
 
       required(path.email, { message: 'Email is required' });
       email(path.email, { message: 'Enter a valid email address' });
+
+      pattern(path.phone, PHONE_PATTERN, {
+        message: 'Enter a valid phone number (7-15 digits, optionally starting with +)'
+      });
 
       required(path.password, { message: 'Password is required' });
       minLength(path.password, 8, { message: 'Password must be at least 8 characters' });
