@@ -31,6 +31,15 @@ interface SeatCategoryFormValue {
 })
 export class EventDetailComponent {
   readonly Number = Number;
+  readonly Math = Math;
+
+  getMaxQuantity(cat: SeatCategorySummary | null): number {
+    if (!cat) return 1;
+    if (cat.seatingCapacity && cat.seatingCapacity > 0) {
+      return Math.min(cat.availableSeats, cat.seatingCapacity);
+    }
+    return cat.availableSeats;
+  }
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -187,6 +196,11 @@ export class EventDetailComponent {
 
     if (qty > category.availableSeats) {
       this.error.set('Quantity exceeds available seats');
+      return false;
+    }
+
+    if (category.seatingCapacity && qty > category.seatingCapacity) {
+      this.error.set(`Quantity exceeds seat limit of ${category.seatingCapacity} per person`);
       return false;
     }
 

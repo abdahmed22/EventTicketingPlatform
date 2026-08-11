@@ -28,6 +28,8 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     List<Booking> findByEventIdAndStatusIn(UUID eventId, List<BookingStatus> statuses);
 
+    List<Booking> findByUserIdAndSeatCategoryIdAndStatusIn(UUID userId, UUID seatCategoryId, List<BookingStatus> statuses);
+
     boolean existsByEventId(UUID eventId);
 
     // Same locking pattern as SeatCategoryRepository.findByIdWithLock.
