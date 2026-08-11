@@ -11,6 +11,10 @@ import {
   EventUpdateRequest
 } from '../../models/event.model';
 
+/**
+ * Person 2 Angular Service: EventService
+ * Communicates with backend /api/events and /api/organizer/events endpoints.
+ */
 @Injectable({ providedIn: 'root' })
 export class EventService {
   private readonly http = inject(HttpClient);

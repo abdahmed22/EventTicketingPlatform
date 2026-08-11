@@ -9,6 +9,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Person 2 Domain Entity: Venue
+ * Represents a venue location.
+ * Organizers submit venue requests (status: PENDING).
+ * Admins review and set status to APPROVED or REJECTED.
+ * Only APPROVED venues can be selected for event creation.
+ */
 @Entity
 @Table(name = "venues")
 @Getter

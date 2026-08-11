@@ -10,6 +10,11 @@ import { getEventCategoryImage } from '../../../utils/event-image.util';
 
 type CategoryOption = EventCategory | 'ALL';
 
+/**
+ * Person 2 Component: EventListComponent
+ * Displays public browse catalog of published events with category tabs,
+ * filters (venue, date range, price range), and Angular Signals.
+ */
 @Component({
   selector: 'app-event-list',
   standalone: true,
