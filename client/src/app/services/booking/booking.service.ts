@@ -34,4 +34,10 @@ export class BookingService {
   myBookings(): Observable<BookingResponse[]> {
     return this.http.get<BookingResponse[]>(`${this.apiUrl}/bookings/my`);
   }
+
+  // Organizer: list bookings for one of their own events.
+  // Backend route: GET /api/organizer/events/{eventId}/bookings
+  getEventBookings(eventId: string): Observable<BookingResponse[]> {
+    return this.http.get<BookingResponse[]>(`${this.apiUrl}/organizer/events/${eventId}/bookings`);
+  }
 }

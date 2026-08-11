@@ -63,7 +63,7 @@ export class VenueService {
   }
 
   // Admin: Reject venue
-  reject(id: string): Observable<VenueResponse> {
-    return this.http.post<VenueResponse>(`${this.apiUrl}/admin/venues/${id}/reject`, {});
+  reject(id: string, reason?: string): Observable<VenueResponse> {
+    return this.http.post<VenueResponse>(`${this.apiUrl}/admin/venues/${id}/reject`, { reason });
   }
 }

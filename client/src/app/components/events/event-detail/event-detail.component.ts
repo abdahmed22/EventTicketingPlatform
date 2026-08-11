@@ -303,7 +303,7 @@ export class EventDetailComponent {
     this.bookingsLoading.set(true);
     this.bookingsError.set(null);
     this.bookingService.getEventBookings(eventId).subscribe({
-      next: (res) => {
+      next: (res: BookingResponse[]) => {
         this.bookings.set(res);
         this.bookingsLoading.set(false);
       },
