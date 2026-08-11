@@ -6,6 +6,11 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+/**
+ * Person 2 Domain Entity: SeatCategory
+ * Represents ticket seat tiers for an event (e.g. VIP, Regular, Student).
+ * Created and managed by Person 2; protected concurrently by Person 3 during booking.
+ */
 @Entity
 @Table(name = "seat_categories")
 @Getter

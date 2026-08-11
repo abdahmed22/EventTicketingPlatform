@@ -1,5 +1,6 @@
 import {
   Component,
+  computed,
   inject,
   OnDestroy,
   OnInit,
@@ -20,6 +21,8 @@ import {
 } from '../../../models/booking.model';
 
 import { ApiError } from '../../../models/api-error.model';
+
+export type BookingFilterOption = 'ALL' | 'CONFIRMED' | 'PENDING' | 'CANCELLED';
 
 @Component({
   selector: 'app-my-bookings',
@@ -47,6 +50,37 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
 
   readonly remainingTimes =
     signal<Record<string, string>>({});
+
+  readonly activeFilter = signal<BookingFilterOption>('ALL');
+
+  readonly filterOptions: { label: string; value: BookingFilterOption }[] = [
+    { label: 'All', value: 'ALL' },
+    { label: 'Confirmed', value: 'CONFIRMED' },
+    { label: 'Pending Payment', value: 'PENDING' },
+    { label: 'Canceled', value: 'CANCELLED' }
+  ];
+
+  readonly filteredBookings = computed(() => {
+    const filter = this.activeFilter();
+    const list = this.bookings();
+    if (filter === 'ALL') {
+      return list;
+    }
+    if (filter === 'CONFIRMED') {
+      return list.filter((b) => b.status === 'CONFIRMED');
+    }
+    if (filter === 'PENDING') {
+      return list.filter((b) => b.status === 'PENDING');
+    }
+    if (filter === 'CANCELLED') {
+      return list.filter((b) => b.status === 'CANCELLED' || b.status === 'EXPIRED');
+    }
+    return list;
+  });
+
+  setFilter(filter: BookingFilterOption): void {
+    this.activeFilter.set(filter);
+  }
 
 
   ngOnInit(): void {
@@ -124,6 +158,11 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
       if (remainingSeconds <= 0) {
 
         updatedTimes[booking.id] = '00:00';
+
+        // Immediately update local booking status to EXPIRED so UI updates without delay
+        this.bookings.update((list) =>
+          list.map((b) => (b.id === booking.id ? { ...b, status: 'EXPIRED' as BookingStatus } : b))
+        );
 
         shouldRefreshBookings = true;
 

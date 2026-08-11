@@ -10,6 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Person 2 Domain Entity: Event
+ * Represents an event created by an Organizer tied to an APPROVED Venue.
+ * State machine: DRAFT -> PUBLISHED -> CANCELLED
+ */
 @Entity
 @Table(name = "events")
 @Getter
@@ -34,7 +39,7 @@ public class Event {
     @Column(name = "category", nullable = false)
     private Category category;
 
-    // Stored separately as requested
+
     @Column(name = "event_date", nullable = false)
     private LocalDate eventDate;
 
@@ -50,7 +55,7 @@ public class Event {
 
     @Column(name = "organizer_id", nullable = false)
     private UUID organizerId;
-
+    //without triggering lazy load
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venue_id", nullable = false, insertable = false, updatable = false)
     private Venue venue;

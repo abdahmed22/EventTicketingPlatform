@@ -66,6 +66,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", ex.getMessage());
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        String message = String.format("Invalid value '%s' for parameter '%s'", ex.getValue(), ex.getName());
+        return build(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER", message);
+    }
+
     @ExceptionHandler({IllegalStateException.class, InvalidStateTransitionException.class})
     public ResponseEntity<ErrorResponse> handleBadRequestState(RuntimeException ex) {
         return build(HttpStatus.BAD_REQUEST, "INVALID_STATE", ex.getMessage());

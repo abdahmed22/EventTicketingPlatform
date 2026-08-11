@@ -9,17 +9,19 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 .nav-container {
   max-width: var(--max-width, 1200px);
   margin: 0 auto;
-  padding: 0 32px;
+  padding: 0 16px;
   height: var(--nav-height, 64px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 12px;
 }
 
 /* Brand */
@@ -31,7 +33,7 @@
 }
 
 .brand-name {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--color-primary, #4F46E5);
   letter-spacing: -0.02em;
@@ -41,13 +43,13 @@
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 2px;
 }
 
 .nav-item {
-  padding: 8px 16px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm, 6px);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--color-text-secondary, #374151);
   text-decoration: none;
@@ -71,7 +73,7 @@
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -79,17 +81,21 @@
 .user-badge-container {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
+  gap: 6px;
+  padding: 4px 10px;
   background: var(--color-bg, #F9FAFB);
   border: 1px solid var(--color-border, #E5E7EB);
   border-radius: var(--radius-pill, 999px);
 }
 
 .user-name {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--color-text, #111827);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .role-badge {
@@ -97,7 +103,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: var(--radius-pill, 999px);
 }
 
@@ -118,10 +124,10 @@
 
 /* Buttons */
 .btn-login {
-  padding: 8px 20px;
+  padding: 6px 16px;
   border: 1px solid var(--color-text, #111827);
   border-radius: var(--radius-sm, 6px);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--color-text, #111827);
   text-decoration: none;
@@ -133,11 +139,11 @@
 }
 
 .btn-register {
-  padding: 8px 20px;
+  padding: 6px 16px;
   background: var(--color-primary, #4F46E5);
   color: #FFFFFF;
   border-radius: var(--radius-sm, 6px);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   text-decoration: none;
   transition: background 0.15s ease;
@@ -148,12 +154,12 @@
 }
 
 .btn-logout {
-  padding: 8px 16px;
+  padding: 6px 12px;
   border: 1px solid var(--color-border, #E5E7EB);
   border-radius: var(--radius-sm, 6px);
   background: var(--color-surface, #FFFFFF);
   color: var(--color-text-secondary, #374151);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -206,7 +212,7 @@
 }
 
 /* ---- Responsive ---- */
-@media (max-width: 768px) {
+@media (max-width: 1080px) {
   .nav-container {
     padding: 0 16px;
   }

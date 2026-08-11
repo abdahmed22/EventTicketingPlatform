@@ -15,34 +15,43 @@ import java.util.UUID;
 
 public interface EventRepository extends JpaRepository<Event, UUID> {
 
+    //returns paginated list of events based on status
     Page<Event> findByStatus(Status status, Pageable pageable);
 
+    //Another derived query. Fetches a single event by its ID and requires it to match a specific status
+    // useful for making sure, say, a public-facing endpoint only returns an event if it's PUBLISHED,
+    // even if the ID exists in a different status. Returns an Optional to handle the "not found" case safely.
     java.util.Optional<Event> findByIdAndStatus(UUID id, Status status);
 
     @Query(value = """
             SELECT DISTINCT e FROM Event e
             LEFT JOIN e.seatCategories sc
             WHERE e.status = :status
-                AND (:category IS NULL OR e.category = :category)
-                AND (:venueId IS NULL OR e.venue.id = :venueId)
-                AND (:organizerId IS NULL OR e.organizer.id = :organizerId)
-                AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom)
-                AND (:dateTo IS NULL OR e.eventDate <= :dateTo)
-                AND (:minPrice IS NULL OR sc.price >= :minPrice)
-                AND (:maxPrice IS NULL OR sc.price <= :maxPrice)
+                AND (cast(:category as string) IS NULL OR e.category = :category)
+                AND (cast(:venueId as java.util.UUID) IS NULL OR e.venue.id = :venueId)
+                AND (cast(:organizerId as java.util.UUID) IS NULL OR e.organizer.id = :organizerId)
+                AND (cast(:dateFrom as java.time.LocalDate) IS NULL OR e.eventDate >= :dateFrom)
+                AND (cast(:dateTo as java.time.LocalDate) IS NULL OR e.eventDate <= :dateTo)
+                AND (cast(:minPrice as java.math.BigDecimal) IS NULL OR sc.price >= :minPrice)
+                AND (cast(:maxPrice as java.math.BigDecimal) IS NULL OR sc.price <= :maxPrice)
             """,
             countQuery = """
             SELECT COUNT(DISTINCT e.id) FROM Event e
             LEFT JOIN e.seatCategories sc
             WHERE e.status = :status
-                AND (:category IS NULL OR e.category = :category)
-                AND (:venueId IS NULL OR e.venue.id = :venueId)
-                AND (:organizerId IS NULL OR e.organizer.id = :organizerId)
-                AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom)
-                AND (:dateTo IS NULL OR e.eventDate <= :dateTo)
-                AND (:minPrice IS NULL OR sc.price >= :minPrice)
-                AND (:maxPrice IS NULL OR sc.price <= :maxPrice)
+                AND (cast(:category as string) IS NULL OR e.category = :category)
+                AND (cast(:venueId as java.util.UUID) IS NULL OR e.venue.id = :venueId)
+                AND (cast(:organizerId as java.util.UUID) IS NULL OR e.organizer.id = :organizerId)
+                AND (cast(:dateFrom as java.time.LocalDate) IS NULL OR e.eventDate >= :dateFrom)
+                AND (cast(:dateTo as java.time.LocalDate) IS NULL OR e.eventDate <= :dateTo)
+                AND (cast(:minPrice as java.math.BigDecimal) IS NULL OR sc.price >= :minPrice)
+                AND (cast(:maxPrice as java.math.BigDecimal) IS NULL OR sc.price <= :maxPrice)
             """)
+
+    //This is the main custom filtering search for public-facing event browsing
+        // (e.g., a search/discovery page). It uses @Query with explicit JPQL for both
+        // the data query and a separate countQuery (needed because Page requires a total count for pagination,
+        // and Spring can't auto-derive a count query from arbitrary JPQL).
     Page<Event> findFilteredPublished(
             @Param("status") Status status,
             @Param("category") Category category,
@@ -59,27 +68,31 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
     @Query(value = """
             SELECT DISTINCT e FROM Event e
             LEFT JOIN e.seatCategories sc
-            WHERE (:status IS NULL OR e.status = :status)
-                AND (:category IS NULL OR e.category = :category)
-                AND (:venueId IS NULL OR e.venue.id = :venueId)
-                AND (:organizerId IS NULL OR e.organizer.id = :organizerId)
-                AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom)
-                AND (:dateTo IS NULL OR e.eventDate <= :dateTo)
-                AND (:minPrice IS NULL OR sc.price >= :minPrice)
-                AND (:maxPrice IS NULL OR sc.price <= :maxPrice)
+            WHERE (cast(:status as string) IS NULL OR e.status = :status)
+                AND (cast(:category as string) IS NULL OR e.category = :category)
+                AND (cast(:venueId as java.util.UUID) IS NULL OR e.venue.id = :venueId)
+                AND (cast(:organizerId as java.util.UUID) IS NULL OR e.organizer.id = :organizerId)
+                AND (cast(:dateFrom as java.time.LocalDate) IS NULL OR e.eventDate >= :dateFrom)
+                AND (cast(:dateTo as java.time.LocalDate) IS NULL OR e.eventDate <= :dateTo)
+                AND (cast(:minPrice as java.math.BigDecimal) IS NULL OR sc.price >= :minPrice)
+                AND (cast(:maxPrice as java.math.BigDecimal) IS NULL OR sc.price <= :maxPrice)
             """,
             countQuery = """
             SELECT COUNT(DISTINCT e.id) FROM Event e
             LEFT JOIN e.seatCategories sc
-            WHERE (:status IS NULL OR e.status = :status)
-                AND (:category IS NULL OR e.category = :category)
-                AND (:venueId IS NULL OR e.venue.id = :venueId)
-                AND (:organizerId IS NULL OR e.organizer.id = :organizerId)
-                AND (:dateFrom IS NULL OR e.eventDate >= :dateFrom)
-                AND (:dateTo IS NULL OR e.eventDate <= :dateTo)
-                AND (:minPrice IS NULL OR sc.price >= :minPrice)
-                AND (:maxPrice IS NULL OR sc.price <= :maxPrice)
+            WHERE (cast(:status as string) IS NULL OR e.status = :status)
+                AND (cast(:category as string) IS NULL OR e.category = :category)
+                AND (cast(:venueId as java.util.UUID) IS NULL OR e.venue.id = :venueId)
+                AND (cast(:organizerId as java.util.UUID) IS NULL OR e.organizer.id = :organizerId)
+                AND (cast(:dateFrom as java.time.LocalDate) IS NULL OR e.eventDate >= :dateFrom)
+                AND (cast(:dateTo as java.time.LocalDate) IS NULL OR e.eventDate <= :dateTo)
+                AND (cast(:minPrice as java.math.BigDecimal) IS NULL OR sc.price >= :minPrice)
+                AND (cast(:maxPrice as java.math.BigDecimal) IS NULL OR sc.price <= :maxPrice)
             """)
+
+    //Nearly identical to #3, but built for the admin dashboard (per the comment, used by GET /api/admin/events).
+    // The key difference:status itself is optional, not fixed. This lets admins either filter by a
+    // specific status or pass null to see events in all statuses
     Page<Event> findFilteredForAdmin(
             @Param("status") Status status,
             @Param("category") Category category,
@@ -90,6 +103,7 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             Pageable pageable);
-
+    //A derived existence check — returns true/false for whether any event references a given venue.
+    // This is typically used as a guard before deleting a venue
     boolean existsByVenueId(UUID venueId);
 }
