@@ -230,3 +230,13 @@
   color: var(--primary);
   border: 1px solid var(--border);
 }
+
+.btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
