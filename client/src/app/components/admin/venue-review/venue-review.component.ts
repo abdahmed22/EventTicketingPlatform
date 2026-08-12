@@ -49,7 +49,7 @@ export class VenueReviewComponent {
    * Status filter tabs. Defaults to PENDING on load so the admin
    * immediately sees the queue that needs action.
    */
-  readonly statusOptions: StatusFilter[] = ['PENDING', 'APPROVED', 'REJECTED', 'ALL'];
+  readonly statusOptions: StatusFilter[] = ['ALL', 'PENDING', 'APPROVED', 'REJECTED'];
 
   readonly venues = signal<VenueResponse[]>([]);
   readonly loading = signal(false);
