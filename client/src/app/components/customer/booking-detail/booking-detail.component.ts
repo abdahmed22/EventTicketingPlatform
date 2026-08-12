@@ -38,6 +38,7 @@ export class BookingDetailComponent {
 
   readonly downloading = signal(false);
   readonly downloadError = signal<string | null>(null);
+  readonly actioning = signal(false);
 
   constructor() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -62,9 +63,9 @@ export class BookingDetailComponent {
 
     forkJoin({
       bookings: this.bookingService.myBookings(),
-      tickets: this.ticketService.listCustomerTickets(userId).pipe(catchError(() => of([] as CustomerTicket[])))
+      ticket: this.ticketService.getMyTicketForBooking(bookingId).pipe(catchError(() => of(null as CustomerTicket | null)))
     }).subscribe({
-      next: ({ bookings, tickets }) => {
+      next: ({ bookings, ticket }) => {
         const booking = bookings.find((b) => b.id === bookingId);
         if (!booking) {
           this.error.set('Booking not found among your bookings.');
@@ -72,7 +73,7 @@ export class BookingDetailComponent {
           return;
         }
         this.booking.set(booking);
-        this.tickets.set(tickets.filter((t) => t.bookingId === bookingId));
+        this.tickets.set(ticket ? [ticket] : []);
 
         this.eventService
           .getPublicById(booking.eventId)
@@ -94,6 +95,49 @@ export class BookingDetailComponent {
     });
   }
 
+  confirmBooking(): void {
+    const booking = this.booking();
+    if (!booking || booking.status !== 'PENDING' || this.actioning()) {
+      return;
+    }
+    this.actioning.set(true);
+    this.error.set(null);
+    this.bookingService.confirm(booking.id).subscribe({
+      next: () => {
+        this.actioning.set(false);
+        this.load(booking.id);
+      },
+      error: (err: unknown) => {
+        this.actioning.set(false);
+        this.error.set(err instanceof ApiError ? err.message : 'Failed to confirm booking.');
+        this.load(booking.id);
+      }
+    });
+  }
+
+  cancelBooking(): void {
+    const booking = this.booking();
+    if (!booking || this.actioning()) {
+      return;
+    }
+    if (!window.confirm('Cancel this booking?')) {
+      return;
+    }
+    this.actioning.set(true);
+    this.error.set(null);
+    this.bookingService.cancel(booking.id).subscribe({
+      next: () => {
+        this.actioning.set(false);
+        this.load(booking.id);
+      },
+      error: (err: unknown) => {
+        this.actioning.set(false);
+        this.error.set(err instanceof ApiError ? err.message : 'Failed to cancel booking.');
+        this.load(booking.id);
+      }
+    });
+  }
+
   // Downloads the single PDF ticket for this booking (covers every seat in
   // the booking) and triggers a browser save/open of the file.
   downloadPdf(): void {
@@ -106,7 +150,7 @@ export class BookingDetailComponent {
     this.downloading.set(true);
     this.downloadError.set(null);
 
-    this.ticketService.downloadTicketPdf(userId, bookingId).subscribe({
+    this.ticketService.downloadMyTicketPdf(bookingId).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
