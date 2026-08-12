@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/tickets/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/tickets/organizer/**").hasAnyRole("ORGANIZER", "ADMIN")
                 .requestMatchers("/api/tickets/customer/**").hasAnyRole("CUSTOMER", "ADMIN")
+                .requestMatchers("/api/tickets/my", "/api/tickets/my/**").hasAnyRole("CUSTOMER", "ORGANIZER", "ADMIN")
             .anyRequest().authenticated())
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
