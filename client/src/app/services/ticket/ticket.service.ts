@@ -13,15 +13,35 @@ export class TicketService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = environment.apiUrl;
 
+  // Customer: list tickets for the JWT user (preferred — no customerId in the path).
+  // Backend route: GET /api/tickets/my
+  listMyTickets(): Observable<CustomerTicket[]> {
+    return this.http.get<CustomerTicket[]>(`${this.apiUrl}/tickets/my`);
+  }
+
   // Customer: list all of the logged-in customer's tickets across events.
   // Backend route: GET /api/tickets/customer/{customerId}
   listCustomerTickets(customerId: string): Observable<CustomerTicket[]> {
     return this.http.get<CustomerTicket[]>(`${this.apiUrl}/tickets/customer/${customerId}`);
   }
 
+  // Single ticket issued for a booking (one ticket covers the whole booking).
+  // Backend route: GET /api/tickets/my/booking/{bookingId}
+  getMyTicketForBooking(bookingId: string): Observable<CustomerTicket> {
+    return this.http.get<CustomerTicket>(`${this.apiUrl}/tickets/my/booking/${bookingId}`);
+  }
+
   // Customer: download the single PDF ticket issued for a booking (covers
   // every seat in that booking). Only available once the booking is
   // CONFIRMED (i.e. a ticket has been issued).
+  // Backend route: GET /api/tickets/my/booking/{bookingId}/pdf
+  downloadMyTicketPdf(bookingId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/tickets/my/booking/${bookingId}/pdf`, {
+      responseType: 'blob'
+    });
+  }
+
+  // Legacy path kept for admin downloads of another user's ticket.
   // Backend route: GET /api/tickets/customer/{customerId}/booking/{bookingId}/pdf
   downloadTicketPdf(customerId: string, bookingId: string): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/tickets/customer/${customerId}/booking/${bookingId}/pdf`, {
