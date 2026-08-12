@@ -89,7 +89,7 @@ export const routes: Routes = [
     path: 'customer/bookings',
     canActivate: [authGuard],
     loadComponent: () =>
-      import('./components/customer/my-bookings/my-bookings.component').then((m) => m.MyBookingsComponent)
+      import('./components/booking/my-bookings/my-bookings.component').then((m) => m.MyBookingsComponent)
   },
   {
     path: 'customer/bookings/:id',
