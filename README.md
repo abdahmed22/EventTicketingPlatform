@@ -88,42 +88,122 @@ Ticket codes use a cryptographically secure random generator and avoid visually 
 
 The frontend uses Angular 22, TypeScript, RxJS, and npm. The backend uses Java 21, Spring Boot, Spring MVC, Spring Security, Spring Data JPA, Hibernate, Liquibase, JJWT, OpenPDF, and ZXing. PostgreSQL 16 provides relational persistence. Docker, Nginx, and Kubernetes files support containerized builds and deployment.
 
-## Local Requirements
+## Requirements
+ 
+| Tool | Version | Needed for |
+|---|---|---|
+| Java (JDK) | 21 | Running/building the backend (Maven wrapper is included, no separate Maven install needed) |
+| Node.js | 22.x | Running/building the frontend |
+| npm | bundled with Node | Frontend dependencies |
+| Docker | latest | Running Postgres locally, and building images for Kubernetes |
+| PostgreSQL | 16 (via Docker) | Application database |
+| kubectl | latest | Deploying to Kubernetes |
+| Minikube | latest | Running a local Kubernetes cluster |
+ 
+---
+ 
+## Option 1: Run locally (without Kubernetes)
+ 
+This is the fastest way to get the app running for day-to-day development.
+ 
+**1. Start Postgres**
+```bash
+cd Infrastructure
+docker compose up -d
+```
+This starts a `postgres:16` container on `localhost:5432` with database `eventticketing`,
+user `postgres`, password `103205` (see `Infrastructure/docker-compose.yaml`).
+ 
+**2. Run the backend**
+```bash
+cd Server
+./mvnw spring-boot:run
+```
+The backend starts on `http://localhost:8080`. Liquibase applies all migrations automatically
+on startup — no manual migration step needed. An admin user is seeded automatically using the
+credentials in `application.yaml` (`admin@example.com` / `Admin12345678Admin` by default).
+ 
+**3. Run the frontend**
+```bash
+cd client
+npm install
+npm start
+```
+The frontend starts on `http://localhost:4200` and talks to the backend at
+`http://localhost:8080/api` (see `client/src/environments/environment.ts`).
+ 
+---
+ 
+## Option 2: Run with Kubernetes (Minikube)
+ 
+Kubernetes manifests live in `Infrastructure/k8s`, organized by component: `database/`,
+`backend/`, `frontend/`, plus a shared `namespace.yaml`.
+ 
+**1. Start Minikube**
+```bash
+minikube start
+```
+ 
+**2. Point your Docker CLI at Minikube's Docker daemon**
+ 
+This lets you build images directly into Minikube without pushing to a registry.
+```bash
+eval $(minikube docker-env)
+```
+Run this in every new terminal you use to build images.
+ 
+**3. Build the backend and frontend images**
+```bash
+docker build -t eventticketing-server:local ./Server
+docker build -t eventticketing-client:local ./client
+```
+These tags match the images referenced in `Infrastructure/k8s/backend/backend-deployment.yaml`
+and `Infrastructure/k8s/frontend/frontend-deployment.yaml`, with `imagePullPolicy: IfNotPresent`,
+so Kubernetes will use the local image instead of pulling from a registry.
+ 
+**4. Apply the Kubernetes manifests**
+```bash
+kubectl apply -f Infrastructure/k8s/namespace.yaml
+kubectl apply -f Infrastructure/k8s/database/
+kubectl apply -f Infrastructure/k8s/backend/
+kubectl apply -f Infrastructure/k8s/frontend/
+```
+Everything is deployed into the `event-ticketing` namespace. Postgres uses a
+`PersistentVolumeClaim` for durable storage, and the backend has startup/readiness/liveness
+probes wired to `/actuator/health`, so it won't be marked ready until the database connection
+and migrations succeed.
+ 
+**5. Check that everything is up**
+```bash
+kubectl get pods -n event-ticketing
+kubectl get svc -n event-ticketing
+```
+ 
+**6. Access the app**
+ 
+Both the backend and frontend are exposed as `NodePort` services (backend on `30080`, frontend
+on `30000`). Get Minikube's IP and open the frontend:
+```bash
+minikube ip
+# e.g. 192.168.49.2
+```
+Then visit `http://<minikube-ip>:30000` in your browser. The frontend's nginx config proxies
+`/api/` requests to the backend service internally via cluster DNS, so no extra configuration
+is needed for the frontend to reach the backend.
+ 
+> **Note:** the backend's CORS config (`Server/src/main/resources/application.yaml`,
+> `app.cors.allowed-origins`) is pre-set to `http://192.168.49.2:30000`, the default Minikube IP.
+> If `minikube ip` returns something different on your machine, update that value (and rebuild
+> the backend image) so the frontend origin is allowed.
 
-Local development requires Java 21, Node.js with npm, Docker or an accessible PostgreSQL 16 installation, and available ports for the selected services. The default configuration expects PostgreSQL on port 5432, Spring Boot on port 8080, and Angular on port 4200.
-
-The Docker Compose file starts only PostgreSQL. The Spring Boot backend and Angular frontend must be started separately.
-
-## Starting PostgreSQL
-
-From the repository root, start the development database with `sudo docker compose -f Infrastructure/docker-compose.yaml up -d`. If the normal `docker` command points to an obsolete installation, use `/usr/bin/docker` explicitly.
-
-The default container creates the `eventticketing` database with the `postgres` user and the development password configured in `Infrastructure/docker-compose.yaml`. If port 5432 is already occupied, stop the existing PostgreSQL process or map the container to another host port and override `SPRING_DATASOURCE_URL` when starting the backend.
-
-## Starting the Backend
-
-Enter the `Server` directory and ensure the Maven wrapper is executable with `chmod +x mvnw`. Start the API with `./mvnw spring-boot:run`. Maven must use Java 21 because the project compiler release is set to version 21.
-
-A successful startup connects to PostgreSQL, runs Liquibase migrations, creates the initial administrator if necessary, enables the booking-expiry scheduler, and listens on port 8080. The health endpoint is available at `http://localhost:8080/actuator/health`.
-
-## Starting the Frontend
-
-Enter the `client` directory, install exact dependencies with `npm ci`, and start the Angular development server with `npm start`. Open `http://localhost:4200` after compilation completes.
-
-Running only `ng serve` displays the frontend but does not start the backend or database. Registration, event loading, bookings, and every other persistent action require PostgreSQL and Spring Boot to be running.
-
-## Initial Data
-
-A new database contains no sample venues or events. The public event catalog therefore displays an empty state until an organizer and venue are approved and an event is created, configured, and published.
-
-The development administrator is seeded as `admin@example.com` with password `Admin12345678Admin` unless environment variables override those values. All repository-provided passwords and secrets are development defaults and must be replaced before any real deployment.
-
-## Docker and Kubernetes
-
-The backend Dockerfile builds the application with a Java 21 JDK and runs it with a smaller Java 21 JRE under a non-root user. The frontend Dockerfile builds Angular with Node.js and serves the static output through Nginx.
-
-The Nginx configuration returns `index.html` for client-side routes and proxies `/api` requests to the Kubernetes backend service. Kubernetes manifests define a dedicated namespace, frontend and backend deployments, internal services, NodePort exposure, health probes, resource limits, PostgreSQL storage, and configuration through ConfigMaps and Secrets.
-
+## Default admin credentials
+ 
+Seeded automatically on first backend startup (configurable via `backend-secret.yaml` for
+Kubernetes, or `application.yaml` locally):
+- Email: `admin@example.com`
+- Password: `Admin12345678Admin`
+Change these before deploying anywhere beyond local development.
+ 
 ## Testing
 
 Backend tests cover event, venue, and seat-category business rules, repository filtering, and booking concurrency. The concurrency tests use real transactions and PostgreSQL behavior to verify last-seat races, overselling prevention, and safe interaction between confirmation, cancellation, and expiration.
@@ -138,4 +218,4 @@ Organizer ticket endpoints should also enforce event ownership inside the backen
 
 ## License
 
-No license is currently declared in the repository. Add a license file before distributing or reusing the project outside its intended environment.
+No license is currently declared in the repository.
