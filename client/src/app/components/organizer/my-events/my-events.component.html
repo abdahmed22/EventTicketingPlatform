@@ -61,6 +61,9 @@
             <a [routerLink]="['/events', event.id]" class="btn btn-ghost">
               View & Seats
             </a>
+            <a routerLink="/organizer/tickets" class="btn btn-ghost">
+              Tickets
+            </a>
 
             @if (event.status === 'DRAFT') {
               <a [routerLink]="['/organizer/events', event.id, 'edit']" class="btn btn-secondary">
