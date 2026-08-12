@@ -13,7 +13,6 @@ import { Subscription, interval } from 'rxjs';
 
 import { BookingService } from '../../../services/booking/booking.service';
 import { TicketService } from '../../../services/ticket/ticket.service';
-import { AuthService } from '../../../services/auth/auth.service';
 
 import {
   BookingResponse,
@@ -34,7 +33,6 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
 
   private readonly bookingService = inject(BookingService);
   private readonly ticketService = inject(TicketService);
-  private readonly authService = inject(AuthService);
 
   private timerSubscription?: Subscription;
 
@@ -386,18 +384,11 @@ export class MyBookingsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const userId = this.authService.user()?.id;
-
-    if (!userId) {
-      this.error.set('You must be logged in to download your ticket.');
-      return;
-    }
-
     this.downloadingId.set(bookingId);
     this.error.set(null);
 
     this.ticketService
-      .downloadTicketPdf(userId, bookingId)
+      .downloadMyTicketPdf(bookingId)
       .subscribe({
 
         next: (blob) => {
