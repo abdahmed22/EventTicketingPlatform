@@ -312,9 +312,10 @@ export class EventDetailComponent {
         quantity: this.quantity(),
       })
       .subscribe({
-        next: () => {
+        next: (booking) => {
           this.reserving.set(false);
-          this.router.navigate(['/bookings']); // redirect to Person 3's my-bookings page
+          // Land on the booking so the customer can Confirm (that is what issues the ticket).
+          this.router.navigate(['/customer/bookings', booking.id]);
         },
         error: (err) => {
           if (err instanceof ApiError && err.status === 409) {
