@@ -37,7 +37,17 @@
         <div class="banner banner-error">{{ downloadError() }}</div>
       }
 
-      @if (tickets().length === 0) {
+      @if (b.status === 'PENDING') {
+        <p class="muted">This reservation is on hold. Confirm it to issue your ticket.</p>
+        <div class="ticket-row-side" style="margin-top: 12px; justify-content: flex-start;">
+          <button type="button" class="btn btn-primary" [disabled]="actioning()" (click)="confirmBooking()">
+            {{ actioning() ? 'Confirming…' : 'Confirm booking' }}
+          </button>
+          <button type="button" class="btn btn-ghost" [disabled]="actioning()" (click)="cancelBooking()">
+            Cancel reservation
+          </button>
+        </div>
+      } @else if (tickets().length === 0) {
         <p class="muted">No ticket has been issued for this booking yet. A ticket is generated automatically once a booking is confirmed.</p>
       } @else {
         @for (ticket of tickets(); track ticket.ticketCode) {
