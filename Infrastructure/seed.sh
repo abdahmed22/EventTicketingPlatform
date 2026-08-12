@@ -12,7 +12,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SQL="./scripts/seed_dummy_data.sql"
-COMPOSE="./Infrastructure/docker-compose.yaml"
+COMPOSE="./docker-compose.yaml"
 CONTAINER="${CONTAINER:-eventticketing-postgres}"
 DB_USER="${POSTGRES_USER:-postgres}"
 DB_NAME="${POSTGRES_DB:-eventticketing}"
