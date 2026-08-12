@@ -68,7 +68,7 @@ export class MyTicketsComponent {
     this.error.set(null);
 
     forkJoin({
-      tickets: this.ticketService.listCustomerTickets(userId),
+      tickets: this.ticketService.listMyTickets(),
       // Bookings may be empty for new customers; tolerate a failure gracefully.
       bookings: this.bookingService.myBookings().pipe(catchError(() => of([] as BookingResponse[])))
     }).subscribe({
@@ -131,7 +131,7 @@ export class MyTicketsComponent {
     this.downloadingBookingId.set(ticket.bookingId);
     this.downloadError.set(null);
 
-    this.ticketService.downloadTicketPdf(userId, ticket.bookingId).subscribe({
+    this.ticketService.downloadMyTicketPdf(ticket.bookingId).subscribe({
       next: (blob) => {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
