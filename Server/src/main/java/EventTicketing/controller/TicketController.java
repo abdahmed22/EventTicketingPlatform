@@ -2,6 +2,7 @@ package EventTicketing.controller;
 
 import EventTicketing.dto.TicketsDTO;
 import EventTicketing.exception.ForbiddenActionException;
+import EventTicketing.exception.ResourceNotFoundException;
 import EventTicketing.model.Ticket;
 import EventTicketing.model.User;
 import EventTicketing.model.enums.UserRole;
@@ -31,6 +32,9 @@ public class TicketController {
     @GetMapping("/admin/{uuid}")
     public ResponseEntity<TicketsDTO.AdminTicketResponse> getTicket(@PathVariable("uuid") String uuid) {
         Ticket t = ticketService.getTicketForAdmin(UUID.fromString(uuid));
+        if (t == null) {
+            throw new ResourceNotFoundException("Ticket not found: " + uuid);
+        }
         return ResponseEntity.ok(toAdminResponse(t));
     }
 
@@ -76,6 +80,9 @@ public class TicketController {
             @PathVariable("event_uuid") UUID eventUuid,
             @PathVariable("ticket_code") String ticketCode) {
         var t = ticketService.getTicketForOrganizer(ticketCode, eventUuid);
+        if (t == null) {
+            throw new ResourceNotFoundException("Ticket not found for event");
+        }
         return ResponseEntity.ok(toOrganizerTicket(t));
     }
 
@@ -90,6 +97,47 @@ public class TicketController {
     // -----------------------------------------------------------------------
     // Customer endpoints
     // -----------------------------------------------------------------------
+
+    /**
+     * Preferred list endpoint: uses the JWT principal, so the frontend does not
+     * have to pass (and cannot spoof) a customer UUID.
+     */
+    @GetMapping("/my")
+    public ResponseEntity<List<TicketsDTO.CustomerTicket>> getMyTickets(
+            @AuthenticationPrincipal User requester) {
+        requireUser(requester);
+        return ResponseEntity.ok(ticketService.getCustomerTickets(requester.getId())
+                .stream().map(this::toCustomerTicket).toList());
+    }
+
+    @GetMapping("/my/booking/{bookingId}")
+    public ResponseEntity<TicketsDTO.CustomerTicket> getMyTicketForBooking(
+            @PathVariable UUID bookingId,
+            @AuthenticationPrincipal User requester) {
+        requireUser(requester);
+        Ticket ticket = ticketService.getTicketForBooking(bookingId);
+        if (ticket == null) {
+            throw new ResourceNotFoundException(
+                    "No ticket has been issued for this booking yet");
+        }
+        assertSelfOrAdmin(ticket.getUserOwnerUUID(), requester);
+        return ResponseEntity.ok(toCustomerTicket(ticket));
+    }
+
+    @GetMapping("/my/booking/{bookingId}/pdf")
+    public ResponseEntity<byte[]> downloadMyTicketPdf(
+            @PathVariable UUID bookingId,
+            @AuthenticationPrincipal User requester) {
+        requireUser(requester);
+        byte[] pdf = ticketService.generateTicketPdf(bookingId, requester);
+        ContentDisposition disposition = ContentDisposition.attachment()
+                .filename("ticket-" + bookingId + ".pdf")
+                .build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+                .body(pdf);
+    }
 
     // Ownership is enforced below: a customer may only fetch their own tickets
     // (an admin may fetch any customer's tickets).
@@ -109,6 +157,9 @@ public class TicketController {
             @AuthenticationPrincipal User requester) {
         assertSelfOrAdmin(customerId, requester);
         var ticket = ticketService.getTicketForCustomer(ticketCode, customerId);
+        if (ticket == null) {
+            throw new ResourceNotFoundException("Ticket not found");
+        }
         return ResponseEntity.ok(toCustomerTicket(ticket));
     }
 
@@ -138,10 +189,14 @@ public class TicketController {
     // Helpers
     // -----------------------------------------------------------------------
 
-    private void assertSelfOrAdmin(UUID customerId, User requester) {
+    private void requireUser(User requester) {
         if (requester == null) {
             throw new ForbiddenActionException("Authentication is required");
         }
+    }
+
+    private void assertSelfOrAdmin(UUID customerId, User requester) {
+        requireUser(requester);
         boolean isSelf = requester.getId() != null && requester.getId().equals(customerId);
         boolean isAdmin = requester.getRole() == UserRole.ADMIN;
         if (!isSelf && !isAdmin) {
