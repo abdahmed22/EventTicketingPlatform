@@ -25,6 +25,9 @@
         <a routerLink="/organizer/venues" routerLinkActive="active" class="nav-item">
           My Venues
         </a>
+        <a routerLink="/organizer/tickets" routerLinkActive="active" class="nav-item">
+          Event Tickets
+        </a>
       }
 
       @if (authService.isAdmin()) {
@@ -72,11 +75,13 @@
 
       @if (authService.isCustomer()) {
         <a routerLink="/bookings" (click)="closeMobileMenu()" class="mobile-nav-item">My Bookings</a>
+        <a routerLink="/tickets" (click)="closeMobileMenu()" class="mobile-nav-item">My Tickets</a>
       }
 
       @if (authService.isOrganizer()) {
         <a routerLink="/organizer/events" (click)="closeMobileMenu()" class="mobile-nav-item">My Events</a>
         <a routerLink="/organizer/venues" (click)="closeMobileMenu()" class="mobile-nav-item">My Venues</a>
+        <a routerLink="/organizer/tickets" (click)="closeMobileMenu()" class="mobile-nav-item">Event Tickets</a>
       }
 
       @if (authService.isAdmin()) {
